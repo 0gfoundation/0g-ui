@@ -1,0 +1,144 @@
+/*
+ * The Tailwind source entry, `@0gfoundation/0g-ui/tailwind.css` (ADR-0012
+ * §2 as amended 2026-09-26, 0g-hub PR #463): what a Tailwind 4 host
+ * imports, after its own `@import "tailwindcss"`, in place of the
+ * compiled shell.css. The host's Tailwind then generates the shell's
+ * utilities beside its own, one definition per class, from the class
+ * names in the shipped JS. The compiled file beside a host's own output
+ * put a second `.hidden` in the utilities layer after the host's `md:`
+ * variants, the minifier merged the pair at the later position, and
+ * every `hidden md:*` in the hub stayed hidden. So: this entry or
+ * shell.css, never both.
+ *
+ * Everything the shell needs beyond the utilities is here, and
+ * shell.source.css builds the compiled file from this same file over
+ * Tailwind's own theme and utilities, so the two entries cannot drift.
+ * Nothing here imports tailwindcss/theme.css or utilities.css: the
+ * host's import does that.
+ */
+
+/* The behaviour: plain CSS on the custom properties the scroll driver
+   writes, unlayered (shell/shell.css). First, as CSS orders imports. */
+@import "./shell/shell.css";
+
+/* The class names come from the shipped modules, so a host scans what it
+   runs, relative to this file. The declarations and the compiled
+   stylesheet beside them carry none it needs. */
+@source "../dist";
+@source not "../dist/**/*.d.ts";
+@source not "../dist/**/*.css";
+
+/* The dark: variant follows the `data-theme` stamp, not the OS: the
+   theme entry (or the host's own theme system) resolves "system" before
+   first paint and writes the attribute, so one convention keys every
+   dark token. A host that defines the same variant keeps it; the later
+   definition wins and they are identical. */
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
+/*
+ * The tokens the shell reads, with the 0G values as defaults: the
+ * documented set and nothing else. `default`, so a host's own @theme
+ * values win whatever the import order; a redefinition on :root wins
+ * too. Colours are never props. The dark values are keyed on
+ * [data-theme="dark"] exactly as the hub's globals.css keys them. Fonts
+ * are the host's: the shell inherits the body's font.
+ */
+@theme default {
+  /* Brand ramp, Prime Purples (0G Brand Guide 2025): Deep Purple for
+     the active nav item, Hero Purple for focus rings. */
+  --color-brand-900: #9200e1;
+  --color-brand-500: #b75fff;
+
+  /* Neutrals: the ground the header's top-of-page scrim is drawn from,
+     the ink every label paints in, the hairline. */
+  --color-bg: #fefefe;
+  --color-ink: #000000;
+  --color-line: #e5e5e5;
+
+  /* Header controls (the theme button): a quiet white pill with a
+     hairline in light, the elevated plum in dark. */
+  --color-control: #ffffff;
+  --color-control-hover: #f7f5fa;
+  --color-on-control: #000000;
+
+  /* Glass: the desktop header bar, the phone header once scrolled and
+     the phone tab bar. A translucent fill over a backdrop blur with a
+     hairline and one soft shadow. */
+  --color-glass: rgba(255, 255, 255, 0.55);
+  --color-glass-line: rgba(0, 0, 0, 0.08);
+  --shadow-glass: 0 8px 32px rgba(0, 0, 0, 0.08);
+}
+
+:root[data-theme="dark"] {
+  --color-brand-900: #cb8aff; /* Mild Purple: Deep Purple is 1.9:1 on this ground */
+  --color-bg: #0d0914;
+  --color-ink: #ffffff;
+  --color-line: rgba(255, 255, 255, 0.1);
+  --color-control: #2a1c42;
+  --color-control-hover: #362757;
+  --color-on-control: #ffffff;
+  --color-glass: rgba(50, 34, 76, 0.55);
+  --color-glass-line: rgba(255, 255, 255, 0.12);
+  --shadow-glass: 0 8px 32px rgba(0, 0, 0, 0.35);
+}
+
+/* Tailwind inlines a shadow token into its utility (it substitutes
+   --tw-shadow-color into the value), so .shadow-glass alone would carry
+   the light value in both themes and a redefinition on :root would
+   never reach it; the hub's dark override was silent for that reason.
+   The two glass layers read the token through the variable the utility
+   sets, so the dark value and a host's own value both land. */
+.shell-pill,
+.shell-header-row {
+  --tw-shadow: var(--shadow-glass);
+}
+
+/*
+ * Not preflight: the element defaults the shell's own markup relies on,
+ * scoped to the header and the tab bar so a host without Tailwind
+ * renders the same and nothing outside the shell is touched. In
+ * Tailwind's base layer, so the utilities still win and a host's own
+ * rules for the controls it puts in the header win too. Beside
+ * preflight they change nothing.
+ */
+@layer base {
+  /* Preflight's universal rule, on the shell's subtree. */
+  .shell-header,
+  .shell-header *,
+  .shell-header *::before,
+  .shell-header *::after,
+  .shell-nav,
+  .shell-nav *,
+  .shell-nav *::before,
+  .shell-nav *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    border: 0 solid;
+  }
+  .shell-nav ul {
+    list-style: none;
+  }
+  .shell-header a,
+  .shell-nav a {
+    color: inherit;
+    -webkit-text-decoration: inherit;
+    text-decoration: inherit;
+  }
+  .shell-header button {
+    font: inherit;
+    font-feature-settings: inherit;
+    font-variation-settings: inherit;
+    letter-spacing: inherit;
+    color: inherit;
+    border-radius: 0;
+    background-color: transparent;
+    opacity: 1;
+    appearance: button;
+  }
+  .shell-header svg,
+  .shell-nav svg {
+    display: block;
+    vertical-align: middle;
+  }
+}

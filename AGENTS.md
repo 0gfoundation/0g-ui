@@ -20,15 +20,20 @@ Three rules keep it portable (ADR-0012 §2):
   `next-intl`, `react-router` and `@docusaurus` under `packages/0g-ui/src`.
   Peer `react >=18`, nothing newer than `useEffect` and
   `useSyncExternalStore`.
-- Compiled CSS, not Tailwind classes. The JSX is written in Tailwind
-  utilities and the package ships `dist/shell.css`, compiled by the
-  Tailwind CLI from `src/shell.source.css` over the package's own
-  sources, utilities only, no preflight, the default theme inlined. The
-  element defaults its own markup needs are a base layer scoped under
-  `.shell-header` and `.shell-nav`, never global.
+- Two CSS entries, one per host kind, never both (ADR-0012 §2 as
+  amended 2026-09-26, 0g-hub #463). A Tailwind 4 host imports
+  `src/tailwind.css` after its own `@import "tailwindcss"`: tokens as
+  `@theme default`, the `dark` variant, the base-layer defaults scoped
+  under `.shell-header` and `.shell-nav`, the behaviour CSS, and an
+  `@source` for the shipped `dist`, so the host generates the utilities
+  itself. A host without Tailwind imports `dist/shell.css`, which the
+  Tailwind CLI compiles from `src/shell.source.css`: Tailwind's theme
+  inlined and its utilities over that same entry, no preflight. The
+  compiled file beside a host's own Tailwind output duplicates
+  utilities, and the minifier merges each pair at the later position.
   Measured geometry is pixel values (`h-[60px]`), never the spacing
-  scale. No hand-named styling classes and no prefix, so the same JSX
-  can serve a Tailwind source entry later.
+  scale. No hand-named styling classes and no prefix, so one JSX serves
+  both entries.
 - Theming is token override. The defaults are the 0G tokens, dark keyed
   on `[data-theme="dark"]`. A site redefines `--color-brand-900` and
   friends on `:root`. Colours are never props.
@@ -41,14 +46,18 @@ Three rules keep it portable (ADR-0012 §2):
   reducer, tested), `scroll-driver.tsx` (the one listener),
   `bootstrap.ts` (the Safari stamp), `shell.css` (the behaviour), and
   `theme/` (the `./theme` entry: bootstrap string, hook, `ThemeButton`)
-- `packages/0g-ui/src/shell.source.css` — the Tailwind input for
-  `dist/shell.css`: layers, the `dark` variant, the token defaults, the
-  behaviour CSS
+- `packages/0g-ui/src/tailwind.css` — the Tailwind source entry: the
+  tokens, the `dark` variant, the shadow routing, the base-layer
+  defaults, the behaviour CSS, the `@source` for `dist`
+- `packages/0g-ui/src/shell.source.css` — the compiled file's input:
+  Tailwind's theme and utilities over `tailwind.css`
 - `packages/0g-ui/tsdown.config.ts` — the JS build, unbundled so every
   module keeps its own `"use client"`
 - `playground/` — a Vite page that renders the header and tab bar over
   sample items and content, the package's sources aliased in, where the
-  phone measurements are taken (`?probe`)
+  phone measurements are taken (`?probe`). It runs on the source entry
+  as a Tailwind host, or on the compiled file with `?css=compiled`;
+  `/compare` shows both and diffs every computed style in the shell
 - `docs/spec/phone-shell-measurements-2026-09-21.md` — what the phone
   shell does and the evidence for each rule, moved with the behaviour
 

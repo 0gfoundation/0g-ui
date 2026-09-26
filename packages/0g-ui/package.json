@@ -19,6 +19,7 @@
       "import": "./dist/index.js"
     },
     "./shell.css": "./dist/shell.css",
+    "./tailwind.css": "./src/tailwind.css",
     "./theme": {
       "types": "./dist/theme/index.d.ts",
       "import": "./dist/theme/index.js"

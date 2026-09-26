@@ -1,0 +1,14 @@
+/*
+ * The playground as a Tailwind host, the default path (`?css=source`):
+ * Tailwind first, then the package's source entry, exactly as a Next or
+ * Vite site on Tailwind 4 imports it. `?css=compiled` loads the compiled
+ * shell.css instead (main.tsx), the path for a host without Tailwind,
+ * and /compare renders the two side by side.
+ */
+@import "tailwindcss";
+@import "@0gfoundation/0g-ui/tailwind.css";
+
+/* The entry scans the shipped dist. The playground renders the sources
+   (vite.config.ts aliases them), so scan those too and an edited class
+   shows without a build. A host never needs this line. */
+@source "../../packages/0g-ui/src/shell";
