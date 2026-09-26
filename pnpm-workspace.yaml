@@ -1,0 +1,11 @@
+packages:
+  - "packages/*"
+  - "playground"
+# @parcel/watcher only serves the Tailwind CLI's --watch, which the build
+# never uses; left unbuilt so installs stay silent.
+allowBuilds:
+  "@parcel/watcher": false
+minimumReleaseAgeExclude:
+  - "@vitest/mocker@5.0.2"
+  - "@vitest/spy@5.0.2"
+  - "vitest@5.0.2"

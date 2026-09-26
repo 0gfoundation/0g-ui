@@ -1,0 +1,38 @@
+name: Publish package
+
+# A `0g-ui-v<version>` tag publishes @0gfoundation/0g-ui to GitHub
+# Packages. The tag must match packages/0g-ui/package.json; a mismatch
+# fails before anything is built. The sites install the same tag as a
+# git dependency (`path:packages/0g-ui`), the 0g-market-data pattern.
+on:
+  push:
+    tags: ["0g-ui-v*"]
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          registry-url: https://npm.pkg.github.com
+          scope: "@0gfoundation"
+      - run: pnpm install --frozen-lockfile
+      - name: Tag matches the package version
+        run: |
+          VERSION=$(node -p "require('./packages/0g-ui/package.json').version")
+          [ "${GITHUB_REF_NAME}" = "0g-ui-v${VERSION}" ] \
+            || { echo "tag ${GITHUB_REF_NAME} but package is ${VERSION}" >&2; exit 1; }
+      - run: pnpm typecheck
+      - run: pnpm test
+      - run: pnpm build
+      - run: pnpm --filter @0gfoundation/0g-ui publish --no-git-checks
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

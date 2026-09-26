@@ -1,0 +1,131 @@
+/*
+ * The source of the compiled `@0gfoundation/0g-ui/shell.css` (ADR-0012
+ * §2): the Tailwind CLI reads this file and writes dist/shell.css, one
+ * file a consumer imports whatever its stack. Utilities only, no
+ * preflight, from the package's own sources and nothing else, so a
+ * consumer's classes are never scanned. Tailwind's default theme is
+ * inlined into the utilities, so the compiled file defines exactly the
+ * tokens below and nothing else on the consumer's :root. Measured
+ * geometry in the components is pixel values, never the spacing scale.
+ *
+ * This is also the Tailwind source entry the ADR says can be added
+ * later: a Tailwind consumer that imports it instead of the compiled
+ * file compiles the same JSX with its own Tailwind.
+ */
+@layer theme, base, utilities;
+@import "tailwindcss/theme.css" layer(theme) theme(inline);
+@import "tailwindcss/utilities.css" layer(utilities) source(none);
+@source "./shell";
+@source not "./shell/**/*.test.ts";
+
+/* The dark: variant follows the `data-theme` stamp, not the OS: the
+   theme entry (or the host's own theme system) resolves "system" before
+   first paint and writes the attribute, so one convention keys every
+   dark token. */
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
+/*
+ * The tokens the shell reads, with the 0G values as defaults: the
+ * documented set and nothing else. A site with its own colours
+ * redefines them on :root after this file; colours are never props.
+ * The dark values are keyed on [data-theme="dark"] exactly as the hub's
+ * globals.css keys them. Fonts are the host's: the shell inherits the
+ * body's font-family.
+ */
+@theme {
+  /* Brand ramp, Prime Purples (0G Brand Guide 2025): Deep Purple for
+     the active nav item, Hero Purple for focus rings. */
+  --color-brand-900: #9200e1;
+  --color-brand-500: #b75fff;
+
+  /* Neutrals: the ground the header's top-of-page scrim is drawn from,
+     the ink every label paints in, the hairline. */
+  --color-bg: #fefefe;
+  --color-ink: #000000;
+  --color-line: #e5e5e5;
+
+  /* Header controls (the theme button): a quiet white pill with a
+     hairline in light, the elevated plum in dark. */
+  --color-control: #ffffff;
+  --color-control-hover: #f7f5fa;
+  --color-on-control: #000000;
+
+  /* Glass: the desktop header bar, the phone header once scrolled and
+     the phone tab bar. A translucent fill over a backdrop blur with a
+     hairline and one soft shadow. */
+  --color-glass: rgba(255, 255, 255, 0.55);
+  --color-glass-line: rgba(0, 0, 0, 0.08);
+  --shadow-glass: 0 8px 32px rgba(0, 0, 0, 0.08);
+}
+
+:root[data-theme="dark"] {
+  --color-brand-900: #cb8aff; /* Mild Purple: Deep Purple is 1.9:1 on this ground */
+  --color-bg: #0d0914;
+  --color-ink: #ffffff;
+  --color-line: rgba(255, 255, 255, 0.1);
+  --color-control: #2a1c42;
+  --color-control-hover: #362757;
+  --color-on-control: #ffffff;
+  --color-glass: rgba(50, 34, 76, 0.55);
+  --color-glass-line: rgba(255, 255, 255, 0.12);
+  --shadow-glass: 0 8px 32px rgba(0, 0, 0, 0.35);
+}
+
+/* Tailwind inlines a shadow token into its utility (it substitutes
+   --tw-shadow-color into the value), so .shadow-glass alone would carry
+   the light value in both themes and a redefinition on :root would
+   never reach it; the hub's dark override was silent for that reason.
+   The two glass layers read the token through the variable the utility
+   sets, so the dark value and a consumer's own value both land. */
+.shell-pill,
+.shell-header-row {
+  --tw-shadow: var(--shadow-glass);
+}
+
+/*
+ * Not preflight: the element defaults the shell's own markup relies on
+ * (preflight supplies them in a Tailwind host), scoped to the header
+ * and the tab bar so a host without Tailwind renders the same and
+ * nothing outside the shell is touched. In Tailwind's base layer, so
+ * the utilities above still win and a host's own rules for the controls
+ * it puts in the header win too.
+ */
+@layer base {
+  .shell-header,
+  .shell-header *,
+  .shell-nav,
+  .shell-nav * {
+    box-sizing: border-box;
+  }
+  .shell-header,
+  .shell-nav,
+  .shell-nav ul {
+    margin: 0;
+    padding: 0;
+  }
+  .shell-nav ul {
+    list-style: none;
+  }
+  .shell-header a,
+  .shell-nav a {
+    color: inherit;
+    text-decoration: inherit;
+  }
+  .shell-header button {
+    margin: 0;
+    padding: 0;
+    font: inherit;
+    color: inherit;
+    background-color: transparent;
+    border: 0 solid;
+  }
+  .shell-header svg,
+  .shell-nav svg {
+    display: block;
+    vertical-align: middle;
+  }
+}
+
+/* The behaviour: plain CSS on the custom properties the scroll driver
+   writes, unlayered, after the utilities. */
+@import "./shell/shell.css";

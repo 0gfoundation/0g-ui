@@ -1,0 +1,126 @@
+/*
+ * The shell's own styles (ADR-0012, #457): the phone shell on scroll,
+ * the tab bar's offset and compaction. Plain CSS on custom properties,
+ * imported by the host's stylesheet after Tailwind; the components'
+ * utility classes compile with the host today and ship compiled with
+ * the package later. Tokens read from the host: --color-glass, and
+ * --color-bg for the top-of-page scrim. Everything else is written by
+ * the driver (scroll-driver.tsx): --shell-t, --shell-fade, --shell-nav,
+ * data-shell-pin and data-shell-motion on <html>, and data-ios-safari
+ * by bootstrap.ts.
+ */
+
+/*
+ * The phone shell on scroll (#428, scroll-driver.tsx): the header
+ * hides on a scroll down, the tab bar compacts, a scroll up brings both
+ * back. Phone only, under the lg breakpoint; the desktop bar never
+ * reads these properties. Transforms and opacity only, nothing here
+ * changes layout or the scroll position. The header is in flow
+ * (relative) until a reveal pins it (sticky); --shell-t is its
+ * translate up within the pin, --shell-fade the glass, 0 at the top of
+ * the page to 1 by 48px. Its transitions run only while
+ * data-shell-motion is "reveal" or "hide". The pill follows --shell-nav,
+ * which the driver writes per frame through both of a change's stages
+ * (the finger's, then the timed one). Why every figure:
+ * docs/spec/phone-shell-measurements-2026-09-21.md.
+ */
+@media (width < 64rem) {
+  .shell-header {
+    position: relative;
+  }
+  [data-shell-pin="on"] .shell-header {
+    position: sticky;
+  }
+  .shell-header-row {
+    position: relative;
+    isolation: isolate;
+    transform: translateY(calc(-1 * var(--shell-t, 0px)));
+    background: color-mix(
+      in srgb,
+      var(--color-glass) calc(var(--shell-fade, 0) * 100%),
+      transparent
+    );
+    -webkit-backdrop-filter: blur(calc(16px * var(--shell-fade, 0)));
+    backdrop-filter: blur(calc(16px * var(--shell-fade, 0)));
+  }
+  /* At the top the glass is gone but the header does not sit bare: a
+     soft scrim of the ground keeps the mark and the controls legible
+     over whatever passes under it (the designer's frames draw it bare;
+     white text vanishes over a light hero). Fades out as the glass
+     fades in. */
+  .shell-header-row::before {
+    content: "";
+    position: absolute;
+    inset: 0 0 -1.75rem;
+    z-index: -1;
+    pointer-events: none;
+    background: linear-gradient(
+      to bottom,
+      color-mix(in srgb, var(--color-bg) 80%, transparent),
+      transparent
+    );
+    opacity: calc(1 - var(--shell-fade, 0));
+  }
+  [data-shell-motion="reveal"] .shell-header-row {
+    transition: transform 280ms cubic-bezier(0, 0, 0.2, 1);
+  }
+  [data-shell-motion="hide"] .shell-header-row {
+    transition: transform 320ms cubic-bezier(0, 0, 0.2, 1);
+  }
+
+  /* The tab bar's bottom offset (tab-bar.tsx): the safe-area inset
+     where there is one, else 16px above the browser's toolbar. Safari
+     26 ends its layout viewport short of its floating bar with no
+     inset reported, so with the stamp the pill sits 8px above the
+     viewport when the inset is zero and on the inset otherwise (the
+     clamp reads exactly that). Measured: docs/spec/phone-shell-measurements-2026-09-21.md §5. */
+  .shell-nav {
+    bottom: max(env(safe-area-inset-bottom, 0px), 1rem);
+    /* No transition on the offset: Safari changes what it reports in
+       small steps during a slow drag, and animating them wobbles
+       (docs/spec/phone-shell-measurements-2026-09-21.md §5). */
+  }
+  [data-ios-safari] .shell-nav {
+    bottom: clamp(
+      8px,
+      env(safe-area-inset-bottom, 0px) * 100 + 8px,
+      env(safe-area-inset-bottom, 0px)
+    );
+  }
+
+  /* The tab bar's compaction (tab-bar.tsx), all from --shell-nav:
+     60px to 48px and 12% narrower, icons only. The glass scales, the
+     five tabs slide towards the centre by 12% of their own width per
+     step from the middle (exactly the scale about its centre), the
+     icons drop to the centre of the shorter pill and shrink from 24 to
+     22, the labels fade. No transitions here: the driver writes the
+     property every frame of a change, so Safari and Chrome render the
+     same frames. */
+  .shell-pill {
+    transform: scale(calc(1 - 0.12 * var(--shell-nav)), calc(1 - 0.2 * var(--shell-nav)));
+  }
+  .shell-tab:nth-child(1) {
+    transform: translateX(calc(24% * var(--shell-nav)));
+  }
+  .shell-tab:nth-child(2) {
+    transform: translateX(calc(12% * var(--shell-nav)));
+  }
+  .shell-tab:nth-child(4) {
+    transform: translateX(calc(-12% * var(--shell-nav)));
+  }
+  .shell-tab:nth-child(5) {
+    transform: translateX(calc(-24% * var(--shell-nav)));
+  }
+  .shell-tab-icon {
+    transform: translateY(calc(7.5px * var(--shell-nav))) scale(calc(1 - 0.0833 * var(--shell-nav)));
+  }
+  .shell-tab-label {
+    opacity: calc(1 - var(--shell-nav));
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .shell-header-row {
+      transition: none !important;
+    }
+  }
+}

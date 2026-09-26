@@ -1,0 +1,52 @@
+{
+  "name": "@0gfoundation/0g-ui",
+  "version": "0.1.0",
+  "description": "The shared 0G site shell (ADR-0012 in 0g-hub): the header, the phone tab bar and their scroll behaviour, the tokens they read, and the theme mechanism as an optional entry",
+  "license": "UNLICENSED",
+  "private": false,
+  "type": "module",
+  "sideEffects": [
+    "**/*.css"
+  ],
+  "files": [
+    "dist",
+    "src",
+    "README.md"
+  ],
+  "exports": {
+    "./shell": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./shell.css": "./dist/shell.css",
+    "./theme": {
+      "types": "./dist/theme/index.d.ts",
+      "import": "./dist/theme/index.js"
+    }
+  },
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com",
+    "access": "restricted"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/0gfoundation/0g-ui.git",
+    "directory": "packages/0g-ui"
+  },
+  "scripts": {
+    "build": "rm -rf dist && tsdown && tailwindcss -i src/shell.source.css -o dist/shell.css",
+    "prepare": "pnpm build",
+    "typecheck": "tsc --noEmit"
+  },
+  "peerDependencies": {
+    "react": ">=18"
+  },
+  "devDependencies": {
+    "@tailwindcss/cli": "^4.3.3",
+    "@types/react": "^19.3.0",
+    "react": "^19.3.0",
+    "tailwindcss": "^4.3.3",
+    "tsdown": "^0.23.0",
+    "typescript": "^5.9.3"
+  }
+}

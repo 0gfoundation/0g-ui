@@ -1,0 +1,128 @@
+/*
+ * The playground's own styles, plain CSS: the package's Tailwind scans
+ * only its own sources, so nothing here is a utility class. The page
+ * mirrors the hub's layout around the shell (the body on the ground in
+ * the ink, the content column, the bottom clearance for the pill) so
+ * the measurements transfer.
+ */
+:root {
+  color-scheme: light;
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+}
+html {
+  height: 100%;
+}
+body {
+  margin: 0;
+  min-height: 100%;
+  background: var(--color-bg);
+  color: var(--color-ink);
+  font-family: ui-sans-serif, system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+.pg-page {
+  display: flex;
+  min-height: 100dvh;
+  max-width: 80rem;
+  margin: 0 auto;
+  flex-direction: column;
+}
+/* Below lg the floating tab bar (60px, 16px up, plus the safe area)
+   needs clearing at the bottom; from lg the content starts 40px under
+   the bar. */
+.pg-main {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px 16px calc(6.5rem + env(safe-area-inset-bottom, 0px));
+}
+@media (width >= 48rem) {
+  .pg-main {
+    padding-inline: 32px;
+  }
+}
+@media (width >= 64rem) {
+  .pg-main {
+    padding-block: 40px;
+  }
+}
+
+.pg-card,
+.pg-hero {
+  border-radius: 24px;
+  padding: 20px 24px;
+}
+.pg-card {
+  background: color-mix(in srgb, var(--color-ink) 4%, transparent);
+}
+.pg-card h2,
+.pg-hero h1 {
+  margin: 0 0 6px;
+  font-size: 17px;
+  font-weight: 600;
+}
+.pg-card p,
+.pg-hero p {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.45;
+  color: color-mix(in srgb, var(--color-ink) 64%, transparent);
+}
+.pg-hero {
+  min-height: 40dvh;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+}
+.pg-hero-light {
+  background: #f5ebff;
+  color: #000;
+}
+.pg-hero-dark {
+  background: #0d0914;
+  color: #fff;
+}
+.pg-hero-light p {
+  color: rgba(0, 0, 0, 0.64);
+}
+.pg-hero-dark p {
+  color: rgba(255, 255, 255, 0.64);
+}
+
+/* The lockup, at the hub's geometry (see logo.tsx). */
+.pg-logo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border-radius: 9999px;
+  color: var(--color-ink);
+  text-decoration: none;
+}
+.pg-logo-mark {
+  height: 25px;
+  width: auto;
+}
+.pg-logo-rule {
+  height: 30px;
+  width: 1px;
+  background: color-mix(in srgb, var(--color-ink) 30%, transparent);
+}
+.pg-logo-word {
+  font-size: 18px;
+  line-height: 1;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+@media (width >= 64rem) {
+  .pg-logo {
+    gap: 16px;
+  }
+  .pg-logo-mark {
+    height: 34px;
+  }
+}
