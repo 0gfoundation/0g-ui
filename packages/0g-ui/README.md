@@ -1,12 +1,15 @@
 # @0gfoundation/0g-ui
 
-The shared 0G site shell (ADR-0012 in `0gfoundation/0g-hub`). Three
+The shared 0G site shell (ADR-0012 in `0gfoundation/0g-hub`). Four
 entries:
 
 - `@0gfoundation/0g-ui/shell` — `SiteHeader`, `TabBar`, `TopNav`,
   `ShellScroll`, `ShellProvider`, the five nav icons, `SHELL_BOOTSTRAP`
-- `@0gfoundation/0g-ui/shell.css` — the compiled styles: the utilities
-  the components use, the token defaults, the scroll behaviour
+- `@0gfoundation/0g-ui/tailwind.css` — the styles for a host on
+  Tailwind 4: imported after `@import "tailwindcss"`, the host generates
+  the shell's utilities with its own
+- `@0gfoundation/0g-ui/shell.css` — the same styles compiled, for a host
+  without Tailwind
 - `@0gfoundation/0g-ui/theme` — `THEME_BOOTSTRAP`, `useTheme`,
   `ThemeButton`, for a site with no theme system of its own
 
@@ -39,7 +42,6 @@ import {
   TabBar,
   type ShellItem,
 } from "@0gfoundation/0g-ui/shell";
-import "@0gfoundation/0g-ui/shell.css";
 
 const items: ShellItem[] = [
   { href: "/discover", label: "Discover", icon: DiscoverIcon },
@@ -66,23 +68,47 @@ paints: `THEME_BOOTSTRAP` (from `./theme`, if the site takes the theme
 entry) and then `SHELL_BOOTSTRAP` (the Safari stamp the phone tab bar's
 bottom offset needs).
 
-### CSS
+### CSS: one entry or the other, never both
 
-`shell.css` carries its token defaults in `@layer theme`, its utilities
-in `@layer utilities`, and the behaviour rules unlayered. A Tailwind
-consumer imports it after its own `@import "tailwindcss"`, so the layer
-order is Tailwind's. Any other consumer imports it anywhere. No
-preflight is included: the element defaults the shell's own markup
-needs (list, link, button, box sizing) sit in `@layer base`, scoped
-under `.shell-header` and `.shell-nav`, a no-op beside preflight. The
-shell inherits the body's font.
+A host on Tailwind 4 imports the source entry after its own Tailwind
+import, in the stylesheet Tailwind builds:
+
+```css
+@import "tailwindcss";
+@import "@0gfoundation/0g-ui/tailwind.css";
+```
+
+The entry carries the tokens, the `dark` variant, the base-layer
+defaults, the behaviour CSS and an `@source` for the package's shipped
+modules, so the host's Tailwind generates the shell's utilities beside
+its own, one definition per class. The compiled file must not be
+imported beside a host's Tailwind output: it puts a second copy of
+`.hidden` and friends in the utilities layer, the minifier merges each
+pair at the later position, and the host's `hidden md:*` elements stay
+hidden (the hub's desktop footer vanished, 0g-hub #463).
+
+A host without Tailwind imports the compiled file anywhere:
+
+```ts
+import "@0gfoundation/0g-ui/shell.css";
+```
+
+It holds the same pieces compiled: token defaults in `@layer theme`,
+the utilities the components use in `@layer utilities` with Tailwind's
+default theme inlined, the behaviour rules unlayered. No preflight in
+either entry: the element defaults the shell's own markup needs (list,
+link, button, box sizing) sit in `@layer base`, scoped under
+`.shell-header` and `.shell-nav`, a no-op beside preflight. The shell
+inherits the body's font.
 
 The tokens it reads, with the 0G values as defaults and the dark values
 keyed on `[data-theme="dark"]`: `--color-brand-900`, `--color-brand-500`,
 `--color-bg`, `--color-ink`, `--color-line`, `--color-control`,
 `--color-control-hover`, `--color-on-control`, `--color-glass`,
 `--color-glass-line`, `--shadow-glass`. A site with its own colours
-redefines them on `:root` after the import. Colours are never props.
+redefines them in its own `@theme` or on `:root`; the package's are
+`@theme default`, so the site's win whatever the import order. Colours
+are never props.
 
 ### Theme
 

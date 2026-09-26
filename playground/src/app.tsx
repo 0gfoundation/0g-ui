@@ -11,6 +11,7 @@ import {
 } from "@0gfoundation/0g-ui/shell";
 import { ThemeButton } from "@0gfoundation/0g-ui/theme";
 
+import { Compare } from "./compare";
 import { Logo } from "./logo";
 import { Probe } from "./probe";
 
@@ -36,6 +37,7 @@ const ITEMS: readonly ShellItem[] = [
  * the links are real navigations here.
  */
 export function App() {
+  if (window.location.pathname === "/compare") return <Compare />;
   return (
     <>
       <div className="pg-page">

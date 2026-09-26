@@ -21,7 +21,12 @@ pnpm typecheck && pnpm lint && pnpm test && pnpm build
 ```
 
 The playground renders the package's sources, aliased in, so a change
-shows without a build. `pnpm build` is what proves `dist`.
+shows without a build, through the Tailwind source entry as a Tailwind
+host would. `?css=compiled` runs it on the compiled `shell.css` instead
+(the path for a host without Tailwind, built by `pnpm build` or the
+package's `prepare` script), and `/compare` renders both side by side
+at phone and desktop widths with a diff of every computed style in the
+header and the tab bar.
 
 ### Measuring the phone shell
 
