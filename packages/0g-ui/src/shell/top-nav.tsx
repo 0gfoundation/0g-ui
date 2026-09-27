@@ -1,7 +1,11 @@
 "use client";
 
+import { useCallback, useState } from "react";
+
 import { cx } from "./cx";
-import { isActive, type ShellItem } from "./items";
+import { OutboundIcon } from "./glyphs";
+import { isActive, isGroup, type ShellNavEntry } from "./items";
+import { NavDropdown } from "./nav-dropdown";
 import { useShell } from "./provider";
 
 /**
@@ -9,15 +13,39 @@ import { useShell } from "./provider";
  * as plain text links in the bar, an outbound one marked by an arrow.
  * The active item reads in brand-900 (Hero Purple, Mild Purple on the
  * dark ground) and carries aria-current; the rest are ink. Replaced the
- * sidebar, whose pills and icons the drafts do not have.
+ * sidebar, whose pills and icons the drafts do not have. A group
+ * (ShellGroup) renders as a NavDropdown in the same row, one open at a
+ * time.
  */
-export function TopNav({ items, label }: { items: readonly ShellItem[]; label: string }) {
+export function TopNav({ items, label }: { items: readonly ShellNavEntry[]; label: string }) {
   const { Link, pathname } = useShell();
+  // One group open at a time, closed by navigation.
+  const [openGroup, setOpenGroup] = useState<string | null>(null);
+  const [openedOn, setOpenedOn] = useState(pathname);
+  if (openedOn !== pathname) {
+    setOpenedOn(pathname);
+    setOpenGroup(null);
+  }
+  const onOpenChange = useCallback(
+    (label: string, open: boolean) =>
+      setOpenGroup((current) => (open ? label : current === label ? null : current)),
+    [],
+  );
   const link =
     "rounded-full px-2.5 py-1.5 text-[15px] font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500";
   return (
     <nav aria-label={label} className="flex items-center">
       {items.map((item) => {
+        if (isGroup(item)) {
+          return (
+            <NavDropdown
+              key={item.label}
+              group={item}
+              open={openGroup === item.label}
+              onOpenChange={(open) => onOpenChange(item.label, open)}
+            />
+          );
+        }
         if (item.external) {
           return (
             <a
@@ -45,26 +73,5 @@ export function TopNav({ items, label }: { items: readonly ShellItem[]; label: s
         );
       })}
     </nav>
-  );
-}
-
-/** Outbound, not a chevron (owner, 2026-09-20: the draft's chevron reads
- *  as "more", and an outbound link leaves the site). The same arrow the
- *  hub's Discover doors and Activity links wear, at label size. */
-function OutboundIcon() {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      width={13}
-      height={13}
-      fill="none"
-      stroke="currentColor"
-      strokeWidth={2}
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden
-    >
-      <path d="M7 17 17 7M8 7h9v9" />
-    </svg>
   );
 }

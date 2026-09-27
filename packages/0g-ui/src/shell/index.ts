@@ -9,7 +9,18 @@
  */
 export { isIosSafari, SHELL_BOOTSTRAP } from "./bootstrap";
 export * from "./icons";
-export { isActive, MAX_ITEMS, type ShellIcon, type ShellItem } from "./items";
+export {
+  isActive,
+  isGroup,
+  isGroupActive,
+  MAX_ITEMS,
+  type ShellGroup,
+  type ShellIcon,
+  type ShellItem,
+  type ShellLinkItem,
+  type ShellNavEntry,
+} from "./items";
+export { MobileMenu } from "./mobile-menu";
 export {
   ShellProvider,
   type ShellLink,

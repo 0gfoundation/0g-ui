@@ -44,7 +44,10 @@ Three rules keep it portable (ADR-0012 §2):
   `src/shell/` at `50a661b` unchanged: `site-header.tsx`, `top-nav.tsx`,
   `tab-bar.tsx`, `icons.tsx`, `items.ts`, `provider.tsx`, `scroll.ts` (the
   reducer, tested), `scroll-driver.tsx` (the one listener),
-  `bootstrap.ts` (the Safari stamp), `shell.css` (the behaviour), and
+  `bootstrap.ts` (the Safari stamp), `shell.css` (the behaviour),
+  `nav-dropdown.tsx` (a group's desktop panel), `mobile-menu.tsx` (the
+  phone menu for a site with no tab bar), `glyphs.tsx` (their stroke
+  marks), and
   `theme/` (the `./theme` entry: bootstrap string, hook, `ThemeButton`)
 - `packages/0g-ui/src/tailwind.css` — the Tailwind source entry: the
   tokens, the `dark` variant, the shadow routing, the base-layer
