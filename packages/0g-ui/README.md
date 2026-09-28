@@ -31,7 +31,10 @@ already built. The registry is restricted, so the scope needs a token:
 "@0gfoundation/0g-ui": "0.1.0"
 ```
 
-`GH_PACKAGES_TOKEN` is a fine-grained token with Packages read. It goes
+`GH_PACKAGES_TOKEN` is a personal access token (classic) with
+`read:packages`. GitHub Packages' npm registry does not accept
+fine-grained tokens, so the Contents-read token the hub clones with will
+not do, even under the same secret name. It goes
 in the consumer's CI secrets, in its hosting project's environment
 variables (Vercel exposes those to the install step), and in a
 developer's own shell. npm expands `${VAR}` in `.npmrc` from the

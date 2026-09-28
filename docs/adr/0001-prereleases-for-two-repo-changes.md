@@ -53,9 +53,16 @@ The publish workflow already puts every release on GitHub Packages, with
 "@0gfoundation/0g-ui": "0.2.0"
 ```
 
-`GH_PACKAGES_TOKEN` is a fine-grained token with Packages read, set as a
-CI secret and as an environment variable on the hosting project. The
-`.npmrc` holds a reference to it, never a value.
+`GH_PACKAGES_TOKEN` is a personal access token (classic) with
+`read:packages`, set as a CI secret and as an environment variable on the
+hosting project. The `.npmrc` holds a reference to it, never a value.
+
+It has to be classic. GitHub Packages' npm registry does not accept
+fine-grained tokens, so the Contents-read token the hub uses to clone
+cannot stand in for it, whatever the secret is named. A classic token
+cannot be narrowed to one repository either: `read:packages` reads every
+package its account can see. It belongs to the org's machine user with
+no other scope.
 
 This is the same for npm and pnpm, which the git dependency was not. It
 also drops three pieces of machinery: no `insteadOf` rewrite to
@@ -124,5 +131,6 @@ time its lockfile was resolved from scratch.
 - The hub still installs by git dependency. Moving it to the registry is
   a follow-up, not a prerequisite: nothing here changes for a consumer
   until it opts in.
-- The sites each need `GH_PACKAGES_TOKEN`. `0g-site` has it as of
-  2026-09-28.
+- Each site needs a classic `read:packages` token in CI and on its
+  hosting project. It is a different credential from the hub's
+  Contents-read token of the same name.

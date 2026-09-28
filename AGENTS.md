@@ -93,7 +93,7 @@ built on its side.
 Bump `version` in `packages/0g-ui/package.json`, merge, tag
 `0g-ui-v<version>` on `main`. The tag publishes to GitHub Packages
 (`.github/workflows/publish.yml`), and the sites install from there,
-with an `.npmrc` for the scope and a Packages-read token
+with an `.npmrc` for the scope and a classic `read:packages` token
 (`packages/0g-ui/README.md` under Install). Not a git dependency: the
 `&path:` fragment that needs is pnpm-only, and npm installs the wrong
 package without saying so (`docs/adr/0001`).
