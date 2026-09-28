@@ -84,24 +84,26 @@ pnpm typecheck · pnpm lint · pnpm test · pnpm build
 ```
 
 `pnpm build` emits `packages/0g-ui/dist` (JS, declarations, `shell.css`)
-and builds the playground. Both publish workflows run it before they
-publish, so the tarball a site installs carries `dist` and nothing is
-built on its side.
+and builds the playground. The package's `prepare` script runs the same
+build, so a git install of the package (what the sites do) gets `dist`.
 
 ## Release
 
 Bump `version` in `packages/0g-ui/package.json`, merge, tag
 `0g-ui-v<version>` on `main`. The tag publishes to GitHub Packages
-(`.github/workflows/publish.yml`), and the sites install from there,
-with an `.npmrc` for the scope and a classic `read:packages` token
-(`packages/0g-ui/README.md` under Install). Not a git dependency: the
-`&path:` fragment that needs is pnpm-only, and npm installs the wrong
-package without saying so (`docs/adr/0001`).
+(`.github/workflows/publish.yml`), but the sites pin the tag as a git
+dependency, with pnpm:
+`git+https://github.com/0gfoundation/0g-ui.git#0g-ui-v<version>&path:packages/0g-ui`.
+Never propose GitHub Packages as a site's install source: its registry
+needs a classic token outside Actions and the org forbids them
+(0g-hub#308). And never an npm consumer: `&path:` is pnpm-only, and npm
+installs the wrong package without an error. `packages/0g-ui/README.md`
+under Install has the clone token and the `allowBuilds` key a consumer
+needs.
 
 A change that spans this repo and a site is two PRs, and the site's has
-to build first. Every push to an open PR here publishes
-`<version>-pr.<pr>.<run>` and comments the pin line
-(`.github/workflows/prerelease.yml`). The site pins that, this merges
-and is tagged, the site repins to the tag and merges. Prereleases are
-deleted on close, so the repin is not optional, and each site has a CI
-job that fails on a prerelease pin once it is out of draft.
+to build first. The site pins this PR's head commit in draft, this
+merges and is tagged, the site repins to the tag and leaves draft.
+`.github/workflows/pin-comment.yml` keeps a comment on each PR with the
+pin line and `allowBuilds` key for its head, and each site's CI rejects
+a commit pin out of draft (`docs/adr/0001`).

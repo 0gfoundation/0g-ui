@@ -18,53 +18,68 @@ host's.
 
 ## Install
 
-From GitHub Packages, where every release is published with `dist`
-already built. The registry is restricted, so the scope needs a token:
-
-```
-# .npmrc
-@0gfoundation:registry=https://npm.pkg.github.com
-//npm.pkg.github.com/:_authToken=${GH_PACKAGES_TOKEN}
-```
+As a git dependency pinned to a release tag, with pnpm:
 
 ```json
-"@0gfoundation/0g-ui": "0.1.0"
+"@0gfoundation/0g-ui": "git+https://github.com/0gfoundation/0g-ui.git#0g-ui-v0.1.0&path:packages/0g-ui"
 ```
 
-`GH_PACKAGES_TOKEN` is a personal access token (classic) with
-`read:packages`. GitHub Packages' npm registry does not accept
-fine-grained tokens, so the Contents-read token the hub clones with will
-not do, even under the same secret name. It goes
-in the consumer's CI secrets, in its hosting project's environment
-variables (Vercel exposes those to the install step), and in a
-developer's own shell. npm expands `${VAR}` in `.npmrc` from the
-environment, so the file holds a reference and never a value.
+pnpm is required. `&path:packages/0g-ui` is a pnpm extension, and npm
+ignores it and installs this repository's root package, which exports
+nothing, without an error. An npm site moves to pnpm first (`0g-site#52`
+did, in one PR).
 
-Nothing else is needed: no clone of this repository, so no Contents
-token and no `insteadOf` rewrite, and no `prepare` build on install.
-npm and pnpm consumers do the same thing.
+Not from GitHub Packages, though `publish.yml` puts every tag there. Its
+npm registry only takes classic personal access tokens from outside
+Actions, and the org forbids them, so no Vercel build can read it
+(0g-hub#308).
 
-A git dependency is not an option for an npm consumer. The
-`&path:packages/0g-ui` fragment the hub uses is a pnpm extension, and
-npm ignores it and installs this repository's root package instead,
-silently (`docs/adr/0001`).
+### The clone needs a token
 
-### Unreleased work: prereleases
+This repository is private, and a workflow's own `GITHUB_TOKEN` cannot
+clone a sibling repository. Every place that installs maps a
+fine-grained token with Contents read on this repository into git before
+the install:
 
-A site that needs shell work still in review pins a prerelease. Every
-push to an open PR here publishes one, named for the PR and the run:
-
-```json
-"@0gfoundation/0g-ui": "0.2.0-pr.2.7"
+```bash
+git config --global url."https://x-access-token:${GH_PACKAGES_TOKEN}@github.com/".insteadOf "https://github.com/"
 ```
 
-The PR comments its own current pin line. Prereleases go out under the
-`pr` dist-tag, never `latest`, and semver keeps them below the release
-they are built from.
+In GitHub Actions that is a step with
+`GH_PACKAGES_TOKEN: ${{ secrets.GH_PACKAGES_TOKEN }}`. On Vercel it goes
+at the front of `installCommand` in `vercel.json`, with the token set as
+an environment variable on the project. Locally your own git credentials
+do the clone. The hub and `0g-site` both have it, in `ci.yml` and
+`vercel.json`.
 
-They are deleted when the PR closes, so a site repins to the released
-version before it merges. Each site enforces that with a CI job that
-fails on a prerelease pin once its PR is out of draft.
+The secret is called `GH_PACKAGES_TOKEN` but holds a clone token, not a
+packages one (named in 0g-hub#465, `GH_MARKET_DATA_TOKEN` before
+2026-09-26).
+
+### `prepare` builds `dist`
+
+A git install gets the repository tree, which carries no `dist`, so the
+package's `prepare` script builds it on install. pnpm asks first, and
+keys the approval on the resolved commit, not the tag, so the key
+changes with every repin (`pnpm install` prints the one it wants):
+
+```yaml
+# pnpm-workspace.yaml
+allowBuilds:
+  '@0gfoundation/0g-ui@git+https://github.com/0gfoundation/0g-ui.git#<sha>&path:packages/0g-ui': true
+```
+
+### Unreleased work: pin the PR's commit
+
+A site that needs shell work still in review pins that PR's head commit
+in place of the tag, and stays in draft. Every push to a PR here
+rewrites a comment on it with the pin line and the `allowBuilds` key for
+its current head.
+
+When the PR merges and is tagged, the site repins to the tag. Each site's
+CI fails on a commit pin once its PR is out of draft, because the
+squash-merge makes a new commit and the pinned one is not what shipped
+(`docs/adr/0001`).
 
 ## Use
 

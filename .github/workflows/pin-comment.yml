@@ -1,0 +1,58 @@
+name: Pin comment
+
+# A site previews shell work that is still in review by pinning this PR's
+# head commit as its git dependency (docs/adr/0001). Every push rewrites one
+# comment on the PR with the line to pin and the allowBuilds key pnpm wants
+# for that commit, so the site's author copies both rather than building
+# them by hand. Nothing is published.
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+concurrency:
+  group: pin-comment-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  comment:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Comment the pin
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+          PR: ${{ github.event.pull_request.number }}
+          SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          SPEC="git+https://github.com/${REPO}.git#${SHA}&path:packages/0g-ui"
+          MARKER="<!-- 0g-ui-pin -->"
+          {
+            echo "$MARKER"
+            echo "To preview this in a site, pin its head commit, \`${SHA:0:7}\`, in \`package.json\`:"
+            echo
+            echo '```json'
+            echo "\"@0gfoundation/0g-ui\": \"$SPEC\""
+            echo '```'
+            echo
+            echo "and allow its build in \`pnpm-workspace.yaml\`, in place of the previous pin's key:"
+            echo
+            echo '```yaml'
+            echo "allowBuilds:"
+            echo "  '@0gfoundation/0g-ui@$SPEC': true"
+            echo '```'
+            echo
+            echo "Then \`pnpm install\`, and keep the site PR in draft. Once this merges and is"
+            echo "tagged, repin the site to \`#0g-ui-v<version>\`. Its CI rejects a commit pin"
+            echo "once the PR leaves draft."
+          } > comment.md
+          ID=$(gh api "/repos/$REPO/issues/$PR/comments" --paginate \
+                 --jq ".[] | select(.body | startswith(\"$MARKER\")) | .id" | head -n 1)
+          if [ -n "$ID" ]; then
+            gh api -X PATCH "/repos/$REPO/issues/comments/$ID" -F body=@comment.md >/dev/null
+          else
+            gh api -X POST "/repos/$REPO/issues/$PR/comments" -F body=@comment.md >/dev/null
+          fi

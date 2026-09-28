@@ -42,25 +42,26 @@ measurements document.
 ## Releasing
 
 Bump `version` in `packages/0g-ui/package.json`, merge to `main`, then
-tag `0g-ui-v<version>`. The tag publishes the package to GitHub
-Packages, which is where the sites install it from:
+tag `0g-ui-v<version>`. The sites pin the tag as a git dependency, with
+pnpm:
 
 ```json
-"@0gfoundation/0g-ui": "0.1.0"
+"@0gfoundation/0g-ui": "git+https://github.com/0gfoundation/0g-ui.git#0g-ui-v0.1.0&path:packages/0g-ui"
 ```
 
-The wiring a consumer needs, which is an `.npmrc` and a token and
-nothing else, is in [the package's README](packages/0g-ui/README.md).
+The tag also publishes to GitHub Packages, but no site installs from
+there: the registry needs a classic token outside Actions, and the org
+forbids them (0g-hub#308). What a consumer needs, pnpm and a clone token
+and a build approval, is in [the package's README](packages/0g-ui/README.md).
 
 ### A change that spans this repo and a site
 
 Two pull requests, and the site's has to build before this one merges.
-Every push to an open PR here publishes a prerelease
-(`0.2.0-pr.<pr>.<run>`) and comments the pin line on itself. The site
-pins that, and its preview deploy renders the unreleased shell.
+Every push to a PR here rewrites a comment on it with the line that pins
+its head commit and the `allowBuilds` key pnpm wants for it. The site
+pins that in draft, and its preview renders the unreleased shell.
 
-The order is: open the PR here, site pins the prerelease, this merges
-and is tagged, site repins to the tag and merges. Prereleases are
-deleted when their PR closes, so the last commit on the site's PR is
-that repin. `docs/adr/0001-prereleases-for-two-repo-changes.md` has the
-reasoning.
+The order is: open the PR here, the site pins its commit, this merges and
+is tagged, the site repins to the tag and leaves draft. The site's CI
+rejects a commit pin out of draft. `docs/adr/0001-previewing-unreleased-shell-work.md`
+has the reasoning.
