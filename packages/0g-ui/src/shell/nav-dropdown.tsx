@@ -31,10 +31,13 @@ export const focusRing =
 export function NavDropdown({
   group,
   open,
+  capped = false,
   onOpenChange,
 }: {
   group: ShellGroup;
   open: boolean;
+  /** At most 1000px from the bar's right edge, for a bar wider than that. */
+  capped?: boolean;
   onOpenChange: (open: boolean) => void;
 }) {
   const { pathname } = useShell();
@@ -117,7 +120,11 @@ export function NavDropdown({
         {group.label}
         <ChevronIcon open={open} />
       </button>
-      <div id={panelId} hidden={!open} className="absolute inset-x-0 top-full z-10 pt-2">
+      <div
+        id={panelId}
+        hidden={!open}
+        className={cx("absolute top-full z-10 pt-2", capped ? "right-0 w-full max-w-[1000px]" : "inset-x-0")}
+      >
         <div className="shell-panel relative rounded-2xl border border-nav-line bg-control p-[30px] shadow-nav-panel">
           <div
             className="grid gap-x-8 pr-10"
@@ -139,6 +146,7 @@ export function NavDropdown({
                           {item.description}
                         </p>
                       )}
+                      <SubLinks item={item} onNavigate={() => onOpenChange(false)} />
                     </li>
                   ))}
                 </ul>
@@ -165,7 +173,7 @@ export function NavDropdown({
 
 /** A panel link: the title with its chevron, in the nav title colour;
  *  the router's Link in-app, a new tab otherwise. `size` picks the
- *  desktop panel's 16px or the phone menu's 14px. */
+ *  desktop panel's rows or the phone menu's 40px tap rows. */
 export function PanelLink({
   item,
   onNavigate,
@@ -179,9 +187,9 @@ export function PanelLink({
   const className = cx(
     "inline-flex items-center font-medium transition-colors hover:text-nav-title-hover",
     focusRing,
-    size === "panel" ? "gap-2 text-[16px] leading-6" : "min-h-7 gap-1 text-[14px] leading-5",
+    size === "panel" ? "gap-2 text-[16px] leading-6" : "min-h-10 gap-1.5 text-[16px] leading-5",
   );
-  const chevron = <ChevronRightIcon size={size === "panel" ? 16 : 12} />;
+  const chevron = <ChevronRightIcon size={size === "panel" ? 16 : 14} />;
   if (item.external) {
     return (
       <a
@@ -207,5 +215,40 @@ export function PanelLink({
       {item.label}
       {chevron}
     </Link>
+  );
+}
+
+/** A link's secondary row (its `links`): small brand-colour titles with
+ *  chevrons, in the desktop panel and the phone menu alike. */
+export function SubLinks({ item, onNavigate }: { item: ShellLinkItem; onNavigate?: () => void }) {
+  const { Link } = useShell();
+  if (!item.links?.length) return null;
+  const className = cx(
+    "inline-flex min-h-6 items-center gap-1 text-[14px] font-medium text-brand-900 transition-colors hover:text-nav-link-hover",
+    focusRing,
+  );
+  return (
+    <div className="mt-1.5 flex flex-wrap gap-x-4 gap-y-1">
+      {item.links.map((link) =>
+        link.external ? (
+          <a
+            key={link.href + link.label}
+            href={link.href}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={onNavigate}
+            className={className}
+          >
+            {link.label}
+            <ChevronRightIcon size={12} />
+          </a>
+        ) : (
+          <Link key={link.href + link.label} href={link.href} onClick={onNavigate} className={className}>
+            {link.label}
+            <ChevronRightIcon size={12} />
+          </Link>
+        ),
+      )}
+    </div>
   );
 }

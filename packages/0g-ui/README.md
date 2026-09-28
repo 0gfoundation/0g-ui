@@ -88,8 +88,7 @@ const items: ShellNavEntry[] = [
   logo={<Logo />}
   items={items}
   navLabel="Main"
-  navAlign="start"
-  fit
+  width="grow"
   controls={<Buttons />}
   menu={{ label: "Menu", closeLabel: "Close menu", aside: <Socials />, footer: <Buttons /> }}
 />;
@@ -98,22 +97,25 @@ const items: ShellNavEntry[] = [
 - A `ShellGroup` (`label` plus `sections`) renders in the bar as a
   trigger opening a panel the bar's width: one column per section under
   its optional heading, each link a title with a chevron over an
-  optional `description`, a close button at the corner. One group is
-  open at a time; hover opens it for a mouse, click and keyboard for
-  everything else, Escape and a click outside close it.
-- `menu` adds a round menu button below lg that opens the same items
-  full screen as a modal dialog: groups as disclosures, `aside` under
-  the list, `footer` pinned at the bottom. It locks the page's scroll,
-  keeps focus inside, and closes on navigation, on a followed link, on
-  Escape and when the viewport reaches lg. It is portalled to `<body>`,
-  hence the `react-dom` peer.
-- `navAlign="start"` puts the desktop nav just after the lockup with the
-  controls at the corner (default `"end"`: the nav beside the controls).
-  `fit` sizes the desktop bar to its content, up to 1000px, rather than
-  always 1000px.
+  optional `description` and an optional row of secondary `links`, a
+  close button at the corner. One group is open at a time; hover opens
+  it for a mouse, click and keyboard for everything else, Escape and a
+  click outside close it.
+- `menu` adds a round menu button below lg that opens the same items as
+  a modal dialog over the dimmed page, as tall as its content: a sheet
+  from the top on phones, a 380px card at the corner from sm. Groups
+  are disclosures with their section headings, `aside` follows the list,
+  `footer` closes the sheet. It locks the page's scroll, keeps focus
+  inside, and closes on navigation, a followed link, Escape, a tap on
+  the dimmed page, and when the viewport reaches lg. It is portalled to
+  `<body>`, hence the `react-dom` peer.
+- `width="grow"` keeps the drafts' 1000px bar up to their 1440px frame
+  and then grows it at the drafts' proportion of the page (70%), for a
+  site whose content runs full width; group panels stay at most 1000px,
+  under the nav. The default, `"fixed"`, is 1000px at every width.
 - `isActive` treats `/` as active on `/` alone.
 
-Without groups, `menu`, `navAlign` or `fit` the header renders exactly
+Without groups, `menu` or `width` the header renders exactly
 as in 0.1.0.
 
 ### CSS: one entry or the other, never both
@@ -156,7 +158,7 @@ keyed on `[data-theme="dark"]`: `--color-brand-900`, `--color-brand-500`,
 `--color-glass-line`, `--shadow-glass`, and for the groups and the phone
 menu only `--color-nav-title`, `--color-nav-title-hover`,
 `--color-nav-muted`, `--color-nav-heading`, `--color-nav-line`,
-`--color-nav-chevron`, `--shadow-nav-panel`. A site with its own colours
+`--color-nav-chevron`, `--color-nav-link-hover`, `--shadow-nav-panel`. A site with its own colours
 redefines them in its own `@theme` or on `:root`; the package's are
 `@theme default`, so the site's win whatever the import order. Colours
 are never props.

@@ -33,8 +33,8 @@ import { TopNav } from "./top-nav";
  * dropdowns. `menu` is for a host with no tab bar: below lg it adds a
  * menu button after the controls that opens the nav full screen
  * (mobile-menu.tsx), with `menu.aside` under the list and `menu.footer`
- * at the bottom. Without it the header
- * renders exactly as before.
+ * at its foot. Without groups, `menu` or `width` the header
+ * renders exactly as in 0.1.0.
  */
 export function SiteHeader({
   logo,
@@ -43,8 +43,7 @@ export function SiteHeader({
   navLabel,
   controls,
   menu,
-  navAlign = "end",
-  fit = false,
+  width = "fixed",
 }: {
   logo: ReactNode;
   title?: ReactNode;
@@ -52,12 +51,13 @@ export function SiteHeader({
   /** The nav's accessible name ("Main"). */
   navLabel: string;
   controls?: ReactNode;
-  /** Where the desktop nav sits: at the controls ("end", the drafts'),
-   *  or just after the lockup with the controls at the corner ("start"). */
-  navAlign?: "start" | "end";
-  /** From lg, the bar as wide as its content (up to 1000px) rather than
-   *  always 1000px, so a short nav leaves no empty stretch. */
-  fit?: boolean;
+  /** The desktop bar's width: "fixed" is the drafts' 1000px at every
+   *  width; "grow" is the same 1000px up to the drafts' 1440px frame and
+   *  then growing at the drafts' proportion of the page (70%, less 8px so
+   *  1440 lands on exactly 1000), for a site whose
+   *  content runs full width. A group's panel stays at most 1000px, under
+   *  the nav at the bar's end. */
+  width?: "fixed" | "grow";
   menu?: {
     label: string;
     closeLabel: string;
@@ -71,23 +71,20 @@ export function SiteHeader({
     <header data-shell-header className="shell-header sticky top-0 z-40 lg:px-8 lg:pt-6">
       <div
         className={cx(
-          "shell-header-row flex h-14 items-center px-4 lg:relative lg:mx-auto lg:max-w-[1000px] lg:rounded-[20px] lg:border lg:border-glass-line lg:bg-glass lg:px-3.5 lg:shadow-glass lg:backdrop-blur-xl",
-          fit && "lg:w-fit",
+          "shell-header-row flex h-14 items-center px-4 lg:relative lg:mx-auto",
+          width === "grow" ? "lg:max-w-[max(1000px,calc(70vw_-_8px))]" : "lg:max-w-[1000px]",
+          "lg:rounded-[20px] lg:border lg:border-glass-line lg:bg-glass lg:px-3.5 lg:shadow-glass lg:backdrop-blur-xl",
         )}
       >
         {logo}
         {title}
-        <div
-          className={
-            navAlign === "start"
-              ? cx("flex flex-1 items-center gap-1.5 lg:ml-8", fit ? "lg:gap-8" : "lg:gap-4")
-              : cx("ml-auto flex items-center gap-1.5", fit ? "lg:gap-8" : "lg:gap-4")
-          }
-        >
+        <div className="ml-auto flex items-center gap-1.5 lg:gap-4">
           <div className="hidden lg:block">
-            <TopNav items={items} label={navLabel} />
+            <TopNav items={items} label={navLabel} capPanels={width === "grow"} />
           </div>
-          <div className={cx("flex items-center gap-1.5", navAlign === "start" && "ml-auto")}>
+          {/* From lg the menu button is hidden, so with no controls the
+              slot would only add the gap before it. */}
+          <div className={cx("flex items-center gap-1.5", !controls && "lg:hidden")}>
             {controls}
             {menu && <MobileMenu logo={logo} items={items} {...menu} />}
           </div>

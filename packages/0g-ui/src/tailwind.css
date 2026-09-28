@@ -71,13 +71,15 @@
   /* Nav panels (design system 2026: dropdown panel web and mobile): a
      group's link titles and their hover, the descriptions under them,
      the section headings, the panel's hairline and shadow, the phone
-     menu's chevrons. Read only by the groups and the phone menu. */
+     menu's chevrons, a link's secondary row's hover (its rest colour is
+     brand-900). Read only by the groups and the phone menu. */
   --color-nav-title: #4e3685;
   --color-nav-title-hover: #865cf6;
   --color-nav-muted: #7c7e89;
   --color-nav-heading: #3a3b45;
   --color-nav-line: #dcdfe4;
   --color-nav-chevron: #b8b8c0;
+  --color-nav-link-hover: #cb8aff;
   --shadow-nav-panel: 0 18px 48px -8px rgba(9, 30, 66, 0.16);
 }
 
@@ -97,6 +99,7 @@
   --color-nav-heading: #7c7e89;
   --color-nav-line: #161619;
   --color-nav-chevron: #7c7e89;
+  --color-nav-link-hover: #e3c1ff;
   --shadow-nav-panel: 0 18px 48px -8px rgba(0, 0, 0, 0.5);
 }
 

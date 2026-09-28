@@ -29,6 +29,9 @@ export type ShellLinkItem = {
   label: string;
   /** A line under the title in the desktop panel and the phone menu. */
   description?: string;
+  /** Secondary links in a row under the description ("About", "Storage
+   *  Scan"): smaller, in the brand colour, each with its own chevron. */
+  links?: readonly { href: string; label: string; external?: boolean }[];
   /** Opens in a new tab, never active. */
   external?: boolean;
 };
