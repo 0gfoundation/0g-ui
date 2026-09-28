@@ -31,13 +31,10 @@ export const focusRing =
 export function NavDropdown({
   group,
   open,
-  capped = false,
   onOpenChange,
 }: {
   group: ShellGroup;
   open: boolean;
-  /** At most 1000px from the bar's right edge, for a bar wider than that. */
-  capped?: boolean;
   onOpenChange: (open: boolean) => void;
 }) {
   const { pathname } = useShell();
@@ -123,7 +120,8 @@ export function NavDropdown({
       <div
         id={panelId}
         hidden={!open}
-        className={cx("absolute top-full z-10 pt-2", capped ? "right-0 w-full max-w-[1000px]" : "inset-x-0")}
+        // -inset-x-px: out over the bar's 1px border, so the outer edges meet
+        className="absolute -inset-x-px top-full z-10 pt-2"
       >
         <div className="shell-panel relative rounded-2xl border border-nav-line bg-control p-[30px] shadow-nav-panel">
           <div

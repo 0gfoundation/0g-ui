@@ -111,8 +111,8 @@ const items: ShellNavEntry[] = [
   `<body>`, hence the `react-dom` peer.
 - `width="grow"` keeps the drafts' 1000px bar up to their 1440px frame
   and then grows it at the drafts' proportion of the page (70%), for a
-  site whose content runs full width; group panels stay at most 1000px,
-  under the nav. The default, `"fixed"`, is 1000px at every width.
+  site whose content runs full width; group panels always span the bar,
+  so their edges line up. The default, `"fixed"`, is 1000px at every width.
 - `isActive` treats `/` as active on `/` alone.
 
 Without groups, `menu` or `width` the header renders exactly

@@ -55,8 +55,8 @@ export function SiteHeader({
    *  width; "grow" is the same 1000px up to the drafts' 1440px frame and
    *  then growing at the drafts' proportion of the page (70%, less 8px so
    *  1440 lands on exactly 1000), for a site whose
-   *  content runs full width. A group's panel stays at most 1000px, under
-   *  the nav at the bar's end. */
+   *  content runs full width. A group's panel always spans the bar, so
+   *  their edges line up at every width. */
   width?: "fixed" | "grow";
   menu?: {
     label: string;
@@ -80,7 +80,7 @@ export function SiteHeader({
         {title}
         <div className="ml-auto flex items-center gap-1.5 lg:gap-4">
           <div className="hidden lg:block">
-            <TopNav items={items} label={navLabel} capPanels={width === "grow"} />
+            <TopNav items={items} label={navLabel} />
           </div>
           {/* From lg the menu button is hidden, so with no controls the
               slot would only add the gap before it. */}

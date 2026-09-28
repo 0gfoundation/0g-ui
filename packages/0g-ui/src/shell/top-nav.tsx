@@ -17,17 +17,7 @@ import { useShell } from "./provider";
  * (ShellGroup) renders as a NavDropdown in the same row, one open at a
  * time.
  */
-export function TopNav({
-  items,
-  label,
-  capPanels = false,
-}: {
-  items: readonly ShellNavEntry[];
-  label: string;
-  /** Keep group panels at most 1000px, under the nav at the bar's end:
-   *  set when the bar itself runs wider (SiteHeader's `width="grow"`). */
-  capPanels?: boolean;
-}) {
+export function TopNav({ items, label }: { items: readonly ShellNavEntry[]; label: string }) {
   const { Link, pathname } = useShell();
   // One group open at a time, closed by navigation.
   const [openGroup, setOpenGroup] = useState<string | null>(null);
@@ -52,7 +42,6 @@ export function TopNav({
               key={item.label}
               group={item}
               open={openGroup === item.label}
-              capped={capPanels}
               onOpenChange={(open) => onOpenChange(item.label, open)}
             />
           );
