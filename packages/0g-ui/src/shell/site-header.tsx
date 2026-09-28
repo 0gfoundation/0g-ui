@@ -1,6 +1,8 @@
 import type { ReactNode } from "react";
 
-import type { ShellItem } from "./items";
+import { cx } from "./cx";
+import type { ShellNavEntry } from "./items";
+import { MobileMenu } from "./mobile-menu";
 import { TopNav } from "./top-nav";
 
 /**
@@ -26,6 +28,13 @@ import { TopNav } from "./top-nav";
  * `title` is for a host that keeps a heading in the header for assistive
  * tech (the drafts draw none); `controls` render in order after the nav,
  * so the host decides what sits at the corner.
+ *
+ * `items` may hold groups (ShellGroup), which the bar renders as
+ * dropdowns. `menu` is for a host with no tab bar: below lg it adds a
+ * menu button after the controls that opens the nav full screen
+ * (mobile-menu.tsx), with `menu.aside` under the list and `menu.footer`
+ * at its foot. Without groups, `menu` or `width` the header
+ * renders exactly as in 0.1.0.
  */
 export function SiteHeader({
   logo,
@@ -33,24 +42,52 @@ export function SiteHeader({
   items,
   navLabel,
   controls,
+  menu,
+  width = "fixed",
 }: {
   logo: ReactNode;
   title?: ReactNode;
-  items: readonly ShellItem[];
+  items: readonly ShellNavEntry[];
   /** The nav's accessible name ("Main"). */
   navLabel: string;
   controls?: ReactNode;
+  /** The desktop bar's width: "fixed" is the drafts' 1000px at every
+   *  width; "grow" is the same 1000px up to the drafts' 1440px frame and
+   *  then growing at the drafts' proportion of the page (70%, less 8px so
+   *  1440 lands on exactly 1000), for a site whose
+   *  content runs full width. A group's panel always spans the bar, so
+   *  their edges line up at every width. */
+  width?: "fixed" | "grow";
+  menu?: {
+    label: string;
+    closeLabel: string;
+    /** Under the list, in its scroll (the socials). */
+    aside?: ReactNode;
+    /** Kept at the bottom over a hairline (the calls to action). */
+    footer?: ReactNode;
+  };
 }) {
   return (
     <header data-shell-header className="shell-header sticky top-0 z-40 lg:px-8 lg:pt-6">
-      <div className="shell-header-row flex h-14 items-center px-4 lg:mx-auto lg:max-w-[1000px] lg:rounded-[20px] lg:border lg:border-glass-line lg:bg-glass lg:px-3.5 lg:shadow-glass lg:backdrop-blur-xl">
+      <div
+        className={cx(
+          "shell-header-row flex h-14 items-center px-4 lg:relative lg:mx-auto",
+          width === "grow" ? "lg:max-w-[max(1000px,calc(70vw_-_8px))]" : "lg:max-w-[1000px]",
+          "lg:rounded-[20px] lg:border lg:border-glass-line lg:bg-glass lg:px-3.5 lg:shadow-glass lg:backdrop-blur-xl",
+        )}
+      >
         {logo}
         {title}
         <div className="ml-auto flex items-center gap-1.5 lg:gap-4">
           <div className="hidden lg:block">
             <TopNav items={items} label={navLabel} />
           </div>
-          <div className="flex items-center gap-1.5">{controls}</div>
+          {/* From lg the menu button is hidden, so with no controls the
+              slot would only add the gap before it. */}
+          <div className={cx("flex items-center gap-1.5", !controls && "lg:hidden")}>
+            {controls}
+            {menu && <MobileMenu logo={logo} items={items} {...menu} />}
+          </div>
         </div>
       </div>
     </header>

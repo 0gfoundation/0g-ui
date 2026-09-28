@@ -67,6 +67,20 @@
   --color-glass: rgba(255, 255, 255, 0.55);
   --color-glass-line: rgba(0, 0, 0, 0.08);
   --shadow-glass: 0 8px 32px rgba(0, 0, 0, 0.08);
+
+  /* Nav panels (design system 2026: dropdown panel web and mobile): a
+     group's link titles and their hover, the descriptions under them,
+     the section headings, the panel's hairline and shadow, the phone
+     menu's chevrons, a link's secondary row's hover (its rest colour is
+     brand-900). Read only by the groups and the phone menu. */
+  --color-nav-title: #4e3685;
+  --color-nav-title-hover: #865cf6;
+  --color-nav-muted: #7c7e89;
+  --color-nav-heading: #3a3b45;
+  --color-nav-line: #dcdfe4;
+  --color-nav-chevron: #b8b8c0;
+  --color-nav-link-hover: #cb8aff;
+  --shadow-nav-panel: 0 18px 48px -8px rgba(9, 30, 66, 0.16);
 }
 
 :root[data-theme="dark"] {
@@ -80,6 +94,13 @@
   --color-glass: rgba(50, 34, 76, 0.55);
   --color-glass-line: rgba(255, 255, 255, 0.12);
   --shadow-glass: 0 8px 32px rgba(0, 0, 0, 0.35);
+  --color-nav-title: #865cf6;
+  --color-nav-title-hover: #cb8aff;
+  --color-nav-heading: #7c7e89;
+  --color-nav-line: #161619;
+  --color-nav-chevron: #7c7e89;
+  --color-nav-link-hover: #e3c1ff;
+  --shadow-nav-panel: 0 18px 48px -8px rgba(0, 0, 0, 0.5);
 }
 
 /* Tailwind inlines a shadow token into its utility (it substitutes
@@ -91,6 +112,9 @@
 .shell-pill,
 .shell-header-row {
   --tw-shadow: var(--shadow-glass);
+}
+.shell-panel {
+  --tw-shadow: var(--shadow-nav-panel);
 }
 
 /*
@@ -110,22 +134,29 @@
   .shell-nav,
   .shell-nav *,
   .shell-nav *::before,
-  .shell-nav *::after {
+  .shell-nav *::after,
+  .shell-menu,
+  .shell-menu *,
+  .shell-menu *::before,
+  .shell-menu *::after {
     box-sizing: border-box;
     margin: 0;
     padding: 0;
     border: 0 solid;
   }
-  .shell-nav ul {
+  .shell-nav ul,
+  .shell-menu ul {
     list-style: none;
   }
   .shell-header a,
-  .shell-nav a {
+  .shell-nav a,
+  .shell-menu a {
     color: inherit;
     -webkit-text-decoration: inherit;
     text-decoration: inherit;
   }
-  .shell-header button {
+  .shell-header button,
+  .shell-menu button {
     font: inherit;
     font-feature-settings: inherit;
     font-variation-settings: inherit;
@@ -137,7 +168,8 @@
     appearance: button;
   }
   .shell-header svg,
-  .shell-nav svg {
+  .shell-nav svg,
+  .shell-menu svg {
     display: block;
     vertical-align: middle;
   }
