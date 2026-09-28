@@ -84,19 +84,24 @@ pnpm typecheck · pnpm lint · pnpm test · pnpm build
 ```
 
 `pnpm build` emits `packages/0g-ui/dist` (JS, declarations, `shell.css`)
-and builds the playground. The package's `prepare` script runs the same
-build, so a git install of the package (what the sites do) gets `dist`.
+and builds the playground. Both publish workflows run it before they
+publish, so the tarball a site installs carries `dist` and nothing is
+built on its side.
 
 ## Release
 
 Bump `version` in `packages/0g-ui/package.json`, merge, tag
 `0g-ui-v<version>` on `main`. The tag publishes to GitHub Packages
-(`.github/workflows/publish.yml`), and the sites pin the same tag as a
-git dependency:
-`git+https://github.com/0gfoundation/0g-ui.git#0g-ui-v<version>&path:packages/0g-ui`.
-During a two-repo change a site pins by sha, then by tag before merge.
+(`.github/workflows/publish.yml`), and the sites install from there,
+with an `.npmrc` for the scope and a Packages-read token
+(`packages/0g-ui/README.md` under Install). Not a git dependency: the
+`&path:` fragment that needs is pnpm-only, and npm installs the wrong
+package without saying so (`docs/adr/0001`).
 
-A consumer needs more than the pin: this repository is private, so its
-CI and hosting clones each need a Contents-read token mapped into git,
-and `prepare` has to be allowed to build `dist`. Both are in
-`packages/0g-ui/README.md` under Install.
+A change that spans this repo and a site is two PRs, and the site's has
+to build first. Every push to an open PR here publishes
+`<version>-pr.<pr>.<run>` and comments the pin line
+(`.github/workflows/prerelease.yml`). The site pins that, this merges
+and is tagged, the site repins to the tag and merges. Prereleases are
+deleted on close, so the repin is not optional, and each site has a CI
+job that fails on a prerelease pin once it is out of draft.

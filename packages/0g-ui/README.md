@@ -18,52 +18,50 @@ host's.
 
 ## Install
 
-As a git dependency pinned to a release tag (the sites cannot read
-GitHub Packages outside Actions):
+From GitHub Packages, where every release is published with `dist`
+already built. The registry is restricted, so the scope needs a token:
+
+```
+# .npmrc
+@0gfoundation:registry=https://npm.pkg.github.com
+//npm.pkg.github.com/:_authToken=${GH_PACKAGES_TOKEN}
+```
 
 ```json
-"@0gfoundation/0g-ui": "git+https://github.com/0gfoundation/0g-ui.git#0g-ui-v0.1.0&path:packages/0g-ui"
+"@0gfoundation/0g-ui": "0.1.0"
 ```
 
-Also published to GitHub Packages on the same tag, for Actions
-consumers.
+`GH_PACKAGES_TOKEN` is a fine-grained token with Packages read. It goes
+in the consumer's CI secrets, in its hosting project's environment
+variables (Vercel exposes those to the install step), and in a
+developer's own shell. npm expands `${VAR}` in `.npmrc` from the
+environment, so the file holds a reference and never a value.
 
-### The clone needs a token
+Nothing else is needed: no clone of this repository, so no Contents
+token and no `insteadOf` rewrite, and no `prepare` build on install.
+npm and pnpm consumers do the same thing.
 
-This repository is private, and a workflow's own `GITHUB_TOKEN` cannot
-clone a sibling repository of the org. Every place that installs needs a
-fine-grained token with Contents read on it, mapped into git rather than
-into npm, because the dependency is a clone and not a registry fetch:
+A git dependency is not an option for an npm consumer. The
+`&path:packages/0g-ui` fragment the hub uses is a pnpm extension, and
+npm ignores it and installs this repository's root package instead,
+silently (`docs/adr/0001`).
 
-```bash
-git config --global url."https://x-access-token:${GH_PACKAGES_TOKEN}@github.com/".insteadOf "https://github.com/"
+### Unreleased work: prereleases
+
+A site that needs shell work still in review pins a prerelease. Every
+push to an open PR here publishes one, named for the PR and the run:
+
+```json
+"@0gfoundation/0g-ui": "0.2.0-pr.2.7"
 ```
 
-That line runs before install in each consumer. In GitHub Actions it is
-a step with `GH_PACKAGES_TOKEN: ${{ secrets.GH_PACKAGES_TOKEN }}`. On
-Vercel it goes at the front of `installCommand` in `vercel.json`, with
-the token set as an environment variable on the project. A local
-checkout needs nothing extra as long as the developer's own git
-credentials reach the repository.
+The PR comments its own current pin line. Prereleases go out under the
+`pr` dist-tag, never `latest`, and semver keeps them below the release
+they are built from.
 
-The hub is the worked example: `.github/workflows/ci.yml` and
-`vercel.json` in `0gfoundation/0g-hub`. Its secret was called
-`GH_MARKET_DATA_TOKEN` until 2026-09-26 (0g-hub #465), so older notes
-name the wrong one.
-
-### `prepare` builds `dist`
-
-A git install gets the repository tree, which carries no `dist`, so the
-package's `prepare` script builds it on install. npm and yarn run `prepare` for a git dependency
-with no further configuration. pnpm asks first, and wants the approval
-keyed by the resolved commit rather than the tag, so the key changes on
-every repin (`pnpm install` prints the one it wants):
-
-```yaml
-# pnpm-workspace.yaml
-allowBuilds:
-  '@0gfoundation/0g-ui@git+https://github.com/0gfoundation/0g-ui.git#<sha>&path:packages/0g-ui': true
-```
+They are deleted when the PR closes, so a site repins to the released
+version before it merges. Each site enforces that with a CI job that
+fails on a prerelease pin once its PR is out of draft.
 
 ## Use
 

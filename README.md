@@ -42,14 +42,25 @@ measurements document.
 ## Releasing
 
 Bump `version` in `packages/0g-ui/package.json`, merge to `main`, then
-tag `0g-ui-v<version>`. The tag publishes the package to GitHub Packages
-and is what the sites pin as a git dependency, `0g-market-data` style:
+tag `0g-ui-v<version>`. The tag publishes the package to GitHub
+Packages, which is where the sites install it from:
 
-```
-"@0gfoundation/0g-ui": "git+https://github.com/0gfoundation/0g-ui.git#0g-ui-v0.1.0&path:packages/0g-ui"
+```json
+"@0gfoundation/0g-ui": "0.1.0"
 ```
 
-The package's `prepare` script builds `dist` on a git install. This
-repository is private, so a consumer's CI and hosting clones both need a
-Contents-read token. The wiring is in `packages/0g-ui/README.md`, with
-the hub as the worked example.
+The wiring a consumer needs, which is an `.npmrc` and a token and
+nothing else, is in [the package's README](packages/0g-ui/README.md).
+
+### A change that spans this repo and a site
+
+Two pull requests, and the site's has to build before this one merges.
+Every push to an open PR here publishes a prerelease
+(`0.2.0-pr.<pr>.<run>`) and comments the pin line on itself. The site
+pins that, and its preview deploy renders the unreleased shell.
+
+The order is: open the PR here, site pins the prerelease, this merges
+and is tagged, site repins to the tag and merges. Prereleases are
+deleted when their PR closes, so the last commit on the site's PR is
+that repin. `docs/adr/0001-prereleases-for-two-repo-changes.md` has the
+reasoning.
