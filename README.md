@@ -42,14 +42,26 @@ measurements document.
 ## Releasing
 
 Bump `version` in `packages/0g-ui/package.json`, merge to `main`, then
-tag `0g-ui-v<version>`. The tag publishes the package to GitHub Packages
-and is what the sites pin as a git dependency, `0g-market-data` style:
+tag `0g-ui-v<version>`. The sites pin the tag as a git dependency, with
+pnpm:
 
-```
+```json
 "@0gfoundation/0g-ui": "git+https://github.com/0gfoundation/0g-ui.git#0g-ui-v0.1.0&path:packages/0g-ui"
 ```
 
-The package's `prepare` script builds `dist` on a git install. A private
-repository of the org needs a Contents-read token mapped into the
-consumer's CI and hosting clones, the way the hub maps
-`GH_MARKET_DATA_TOKEN`.
+The tag also publishes to GitHub Packages, but no site installs from
+there: the registry needs a classic token outside Actions, and the org
+forbids them (0g-hub#308). What a consumer needs, pnpm and a clone token
+and a build approval, is in [the package's README](packages/0g-ui/README.md).
+
+### A change that spans this repo and a site
+
+Two pull requests, and the site's has to build before this one merges.
+Every push to a PR here rewrites a comment on it with the line that pins
+its head commit and the `allowBuilds` key pnpm wants for it. The site
+pins that in draft, and its preview renders the unreleased shell.
+
+The order is: open the PR here, the site pins its commit, this merges and
+is tagged, the site repins to the tag and leaves draft. The site's CI
+rejects a commit pin out of draft. `docs/adr/0001-previewing-unreleased-shell-work.md`
+has the reasoning.

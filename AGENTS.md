@@ -91,7 +91,19 @@ build, so a git install of the package (what the sites do) gets `dist`.
 
 Bump `version` in `packages/0g-ui/package.json`, merge, tag
 `0g-ui-v<version>` on `main`. The tag publishes to GitHub Packages
-(`.github/workflows/publish.yml`), and the sites pin the same tag as a
-git dependency:
+(`.github/workflows/publish.yml`), but the sites pin the tag as a git
+dependency, with pnpm:
 `git+https://github.com/0gfoundation/0g-ui.git#0g-ui-v<version>&path:packages/0g-ui`.
-During a two-repo change a site pins by sha, then by tag before merge.
+Never propose GitHub Packages as a site's install source: its registry
+needs a classic token outside Actions and the org forbids them
+(0g-hub#308). And never an npm consumer: `&path:` is pnpm-only, and npm
+installs the wrong package without an error. `packages/0g-ui/README.md`
+under Install has the clone token and the `allowBuilds` key a consumer
+needs.
+
+A change that spans this repo and a site is two PRs, and the site's has
+to build first. The site pins this PR's head commit in draft, this
+merges and is tagged, the site repins to the tag and leaves draft.
+`.github/workflows/pin-comment.yml` keeps a comment on each PR with the
+pin line and `allowBuilds` key for its head, and each site's CI rejects
+a commit pin out of draft (`docs/adr/0001`).

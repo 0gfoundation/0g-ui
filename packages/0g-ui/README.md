@@ -18,16 +18,68 @@ host's.
 
 ## Install
 
-As a git dependency pinned to a release tag (the sites cannot read
-GitHub Packages outside Actions):
+As a git dependency pinned to a release tag, with pnpm:
 
 ```json
 "@0gfoundation/0g-ui": "git+https://github.com/0gfoundation/0g-ui.git#0g-ui-v0.1.0&path:packages/0g-ui"
 ```
 
-The package's `prepare` script builds `dist` on install, so `pnpm` needs
-to be allowed to build it. Also published to GitHub Packages on the same
-tag for Actions consumers.
+pnpm is required. `&path:packages/0g-ui` is a pnpm extension, and npm
+ignores it and installs this repository's root package, which exports
+nothing, without an error. An npm site moves to pnpm first (`0g-site#52`
+did, in one PR).
+
+Not from GitHub Packages, though `publish.yml` puts every tag there. Its
+npm registry only takes classic personal access tokens from outside
+Actions, and the org forbids them, so no Vercel build can read it
+(0g-hub#308).
+
+### The clone needs a token
+
+This repository is private, and a workflow's own `GITHUB_TOKEN` cannot
+clone a sibling repository. Every place that installs maps a
+fine-grained token with Contents read on this repository into git before
+the install:
+
+```bash
+git config --global url."https://x-access-token:${GH_PACKAGES_TOKEN}@github.com/".insteadOf "https://github.com/"
+```
+
+In GitHub Actions that is a step with
+`GH_PACKAGES_TOKEN: ${{ secrets.GH_PACKAGES_TOKEN }}`. On Vercel it goes
+at the front of `installCommand` in `vercel.json`, with the token set as
+an environment variable on the project. Locally your own git credentials
+do the clone. The hub and `0g-site` both have it, in `ci.yml` and
+`vercel.json`.
+
+The secret is called `GH_PACKAGES_TOKEN` but holds a clone token, not a
+packages one (named in 0g-hub#465, `GH_MARKET_DATA_TOKEN` before
+2026-09-26).
+
+### `prepare` builds `dist`
+
+A git install gets the repository tree, which carries no `dist`, so the
+package's `prepare` script builds it on install. pnpm asks first, and
+keys the approval on the resolved commit, not the tag, so the key
+changes with every repin (`pnpm install` prints the one it wants):
+
+```yaml
+# pnpm-workspace.yaml
+allowBuilds:
+  '@0gfoundation/0g-ui@git+https://github.com/0gfoundation/0g-ui.git#<sha>&path:packages/0g-ui': true
+```
+
+### Unreleased work: pin the PR's commit
+
+A site that needs shell work still in review pins that PR's head commit
+in place of the tag, and stays in draft. Every push to a PR here
+rewrites a comment on it with the pin line and the `allowBuilds` key for
+its current head.
+
+When the PR merges and is tagged, the site repins to the tag. Each site's
+CI fails on a commit pin once its PR is out of draft, because the
+squash-merge makes a new commit and the pinned one is not what shipped
+(`docs/adr/0001`).
 
 ## Use
 
