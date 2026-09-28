@@ -95,3 +95,8 @@ Bump `version` in `packages/0g-ui/package.json`, merge, tag
 git dependency:
 `git+https://github.com/0gfoundation/0g-ui.git#0g-ui-v<version>&path:packages/0g-ui`.
 During a two-repo change a site pins by sha, then by tag before merge.
+
+A consumer needs more than the pin: this repository is private, so its
+CI and hosting clones each need a Contents-read token mapped into git,
+and `prepare` has to be allowed to build `dist`. Both are in
+`packages/0g-ui/README.md` under Install.

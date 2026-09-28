@@ -25,9 +25,45 @@ GitHub Packages outside Actions):
 "@0gfoundation/0g-ui": "git+https://github.com/0gfoundation/0g-ui.git#0g-ui-v0.1.0&path:packages/0g-ui"
 ```
 
-The package's `prepare` script builds `dist` on install, so `pnpm` needs
-to be allowed to build it. Also published to GitHub Packages on the same
-tag for Actions consumers.
+Also published to GitHub Packages on the same tag, for Actions
+consumers.
+
+### The clone needs a token
+
+This repository is private, and a workflow's own `GITHUB_TOKEN` cannot
+clone a sibling repository of the org. Every place that installs needs a
+fine-grained token with Contents read on it, mapped into git rather than
+into npm, because the dependency is a clone and not a registry fetch:
+
+```bash
+git config --global url."https://x-access-token:${GH_PACKAGES_TOKEN}@github.com/".insteadOf "https://github.com/"
+```
+
+That line runs before install in each consumer. In GitHub Actions it is
+a step with `GH_PACKAGES_TOKEN: ${{ secrets.GH_PACKAGES_TOKEN }}`. On
+Vercel it goes at the front of `installCommand` in `vercel.json`, with
+the token set as an environment variable on the project. A local
+checkout needs nothing extra as long as the developer's own git
+credentials reach the repository.
+
+The hub is the worked example: `.github/workflows/ci.yml` and
+`vercel.json` in `0gfoundation/0g-hub`. Its secret was called
+`GH_MARKET_DATA_TOKEN` until 2026-09-26 (0g-hub #465), so older notes
+name the wrong one.
+
+### `prepare` builds `dist`
+
+A git install gets the repository tree, which carries no `dist`, so the
+package's `prepare` script builds it on install. npm and yarn run `prepare` for a git dependency
+with no further configuration. pnpm asks first, and wants the approval
+keyed by the resolved commit rather than the tag, so the key changes on
+every repin (`pnpm install` prints the one it wants):
+
+```yaml
+# pnpm-workspace.yaml
+allowBuilds:
+  '@0gfoundation/0g-ui@git+https://github.com/0gfoundation/0g-ui.git#<sha>&path:packages/0g-ui': true
+```
 
 ## Use
 

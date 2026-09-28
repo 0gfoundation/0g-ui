@@ -49,7 +49,7 @@ and is what the sites pin as a git dependency, `0g-market-data` style:
 "@0gfoundation/0g-ui": "git+https://github.com/0gfoundation/0g-ui.git#0g-ui-v0.1.0&path:packages/0g-ui"
 ```
 
-The package's `prepare` script builds `dist` on a git install. A private
-repository of the org needs a Contents-read token mapped into the
-consumer's CI and hosting clones, the way the hub maps
-`GH_MARKET_DATA_TOKEN`.
+The package's `prepare` script builds `dist` on a git install. This
+repository is private, so a consumer's CI and hosting clones both need a
+Contents-read token. The wiring is in `packages/0g-ui/README.md`, with
+the hub as the worked example.
