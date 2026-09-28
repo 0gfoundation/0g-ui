@@ -1,0 +1,12 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "types": ["vite/client", "node"],
+    "allowImportingTsExtensions": true,
+    "paths": {
+      "@0gfoundation/0g-ui/shell": ["../../packages/0g-ui/src/shell/index.ts"],
+      "@0gfoundation/0g-ui/theme": ["../../packages/0g-ui/src/shell/theme/index.ts"]
+    }
+  },
+  "include": ["src", "vite.config.ts"]
+}

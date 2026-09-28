@@ -13,7 +13,8 @@
     "typecheck": "pnpm -r typecheck",
     "lint": "eslint .",
     "test": "vitest run",
-    "build": "pnpm -r build"
+    "build": "pnpm -r build",
+    "consumer-diff": "pnpm --filter @0gfoundation/0g-ui-consumer-diff diff"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

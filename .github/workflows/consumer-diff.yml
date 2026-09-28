@@ -1,0 +1,70 @@
+name: Consumer diff
+
+# What a PR changes for each site in consumers.json, before any site
+# repins: the header and tab bar rendered from the PR's merge result and
+# from its base, compared as markup, screenshots, bytes and declarations
+# (tools/consumer-diff). One comment on the PR, rewritten on every push.
+# Informational: it fails only when the harness itself breaks, never on
+# a difference.
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+concurrency:
+  group: consumer-diff-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  diff:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # The base is built from its own commit, in a worktree.
+          fetch-depth: 0
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Chromium
+        run: pnpm --filter @0gfoundation/0g-ui-consumer-diff exec playwright install --with-deps chromium
+      # The checkout is the PR merged into its base, and its first parent
+      # is the base as it stood: the diff is what merging would change.
+      - name: Diff
+        env:
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: pnpm consumer-diff --base HEAD^1 --head-label "${HEAD_SHA:0:7}" --out "$RUNNER_TEMP/consumer-diff"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: consumer-diff
+          path: ${{ runner.temp }}/consumer-diff
+          if-no-files-found: ignore
+      - name: Comment
+        if: always()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+          PR: ${{ github.event.pull_request.number }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          MARKER="<!-- 0g-ui-consumer-diff -->"
+          REPORT="$RUNNER_TEMP/consumer-diff/report.md"
+          if [ ! -f "$REPORT" ]; then
+            printf '%s\n### What this changes for each site\n\nThe consumer diff did not finish. Its log is in [the run](%s).\n' "$MARKER" "$RUN_URL" > "$RUNNER_TEMP/failed.md"
+            REPORT="$RUNNER_TEMP/failed.md"
+          fi
+          ID=$(gh api "/repos/$REPO/issues/$PR/comments" --paginate \
+                 --jq ".[] | select(.body | startswith(\"$MARKER\")) | .id" | head -n 1)
+          if [ -n "$ID" ]; then
+            gh api -X PATCH "/repos/$REPO/issues/comments/$ID" -F body=@"$REPORT" >/dev/null
+          else
+            gh api -X POST "/repos/$REPO/issues/$PR/comments" -F body=@"$REPORT" >/dev/null
+          fi

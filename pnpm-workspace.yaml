@@ -1,10 +1,13 @@
 packages:
   - "packages/*"
   - "playground"
+  - "tools/*"
 # @parcel/watcher only serves the Tailwind CLI's --watch, which the build
-# never uses; left unbuilt so installs stay silent.
+# never uses; left unbuilt so installs stay silent. esbuild is tsx's, which
+# runs the consumer diff (as 0g-market-data allows it).
 allowBuilds:
   "@parcel/watcher": false
+  esbuild: true
 minimumReleaseAgeExclude:
   - "@vitest/mocker@5.0.2"
   - "@vitest/spy@5.0.2"

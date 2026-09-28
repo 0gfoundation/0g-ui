@@ -11,6 +11,9 @@ with its own colours, menu, title and lockup.
   where the phone measurements are taken
 - `docs/spec/phone-shell-measurements-2026-09-21.md` — what the phone
   shell does on scroll and the evidence for each rule
+- `consumers.json` — the sites that install the package and what their
+  headers pass it
+- `tools/consumer-diff/` — what a change does to each of those sites
 
 ## Working on it
 
@@ -38,6 +41,38 @@ with the browser's bar expanded and again after a scroll has collapsed
 it. `?probe=cover` applies `viewport-fit=cover` first. The numbers to
 compare against, and why each rule is what it is, are in the
 measurements document.
+
+## What a change does to the sites
+
+Each site pins a release, so nothing here reaches it until it repins. The
+consumer diff says what it will see when it does. On every PR it renders
+each site in `consumers.json` from the PR's merge result and from its
+base, the way that site imports the package, and comments with the
+difference:
+
+- the header's and tab bar's markup, as a diff
+- screenshots of every state at phone and desktop widths in each of the
+  site's themes: the page top, after a scroll, each nav group's panel,
+  the phone menu and each group in it. Base, head and pixel-diff images
+  of every state that changed are in the run's artifact
+- the change in the gzipped JS and CSS the site's page ships
+- the change in the package's declarations
+
+It never fails a PR. A difference is information: the PR should mean
+every one. Run it locally with `pnpm consumer-diff` (the working tree
+against `origin/main`) or `pnpm consumer-diff --head <ref>`.
+
+It sees what a site passes the shell, not the site's own code meeting
+it: its CSS beside the entry, its types, its build. Building each site
+against a PR is #4, for when there are more sites than one person checks
+by hand.
+
+`consumers.json` is only as good as it is current. Each entry mirrors a
+site's header: nav entries and menu verbatim, the lockup and controls as
+stubs of their size, the CSS entry, the themes, the site's own CSS that
+reaches the shell. `source` names the files it came from. When a site
+adopts the package or changes what its header passes, its entry changes
+with it.
 
 ## Releasing
 

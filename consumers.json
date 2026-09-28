@@ -1,0 +1,243 @@
+{
+  "consumers": [
+    {
+      "name": "hub",
+      "repo": "0gfoundation/0g-hub",
+      "url": "https://hub.0g.ai",
+      "stack": "Next 16, React 19, Tailwind 4",
+      "source": {
+        "ref": "main",
+        "files": [
+          "src/components/shell/site-header.tsx",
+          "src/components/shell/surfaces.tsx",
+          "src/components/shell/bottom-nav.tsx",
+          "src/components/shell/theme-button.tsx",
+          "src/components/shell/wallet-controls.tsx",
+          "src/app/layout.tsx",
+          "src/app/globals.css",
+          "messages/en.json"
+        ]
+      },
+      "css": "tailwind.css",
+      "themes": ["light", "dark"],
+      "path": "/swap",
+      "hostCss": [
+        "@custom-variant dark (&:where([data-theme=\"dark\"], [data-theme=\"dark\"] *));",
+        "body {",
+        "  background: radial-gradient(80% 60% at 70% 0%, color-mix(in srgb, #e3c1ff 35%, transparent), transparent 70%), radial-gradient(60% 50% at 20% 100%, color-mix(in srgb, #d5a3ff 20%, transparent), transparent 70%), var(--color-bg);",
+        "  background-attachment: fixed;",
+        "  color: var(--color-ink);",
+        "}",
+        ":root[data-theme=\"dark\"] body {",
+        "  background: radial-gradient(52% 38% at 82% -4%, rgba(146, 0, 225, 0.2), transparent 70%), radial-gradient(44% 34% at 6% 104%, rgba(183, 95, 255, 0.12), transparent 70%), var(--color-bg);",
+        "  background-attachment: fixed;",
+        "}"
+      ],
+      "layout": { "maxWidth": 1280 },
+      "header": {
+        "logo": { "label": "0G Hub", "width": 100, "height": 30 },
+        "title": "Bridge & Swap",
+        "navLabel": "Main",
+        "items": [
+          { "href": "/discover", "label": "Discover", "icon": "DiscoverIcon" },
+          { "href": "/swap", "label": "Bridge & Swap", "shortLabel": "Swap", "icon": "SwapIcon" },
+          { "href": "/activity", "label": "Activity", "icon": "ActivityIcon" },
+          { "href": "/portfolio", "label": "Portfolio", "icon": "PortfolioIcon" },
+          { "href": "https://chainscan.0g.ai", "label": "Explorer", "icon": "ExplorerIcon", "external": true }
+        ],
+        "controls": [
+          { "stub": "Connect", "width": 88 },
+          { "component": "ThemeButton", "toDarkLabel": "Switch to dark mode", "toLightLabel": "Switch to light mode" },
+          { "stub": "Settings", "width": 34 }
+        ]
+      },
+      "tabBar": { "label": "Main" }
+    },
+    {
+      "name": "0g-site",
+      "repo": "0gfoundation/0g-site",
+      "url": "https://0g.ai",
+      "stack": "Next 16, React 19, Tailwind 4",
+      "source": {
+        "ref": "navbar-change",
+        "files": [
+          "src/components/SiteHeader.tsx",
+          "src/app/(site)/layout.tsx",
+          "src/app/globals.css"
+        ]
+      },
+      "css": "tailwind.css",
+      "themes": ["light"],
+      "path": "/blog",
+      "hostCss": [
+        "@theme {",
+        "  --color-ink: #000000;",
+        "}",
+        "@layer base {",
+        "  body {",
+        "    font-weight: 300;",
+        "    line-height: 1.5;",
+        "    letter-spacing: -0.01em;",
+        "  }",
+        "}"
+      ],
+      "layout": { "contentUnderHeader": true },
+      "header": {
+        "logo": { "label": "0G", "width": 56, "height": 30 },
+        "navLabel": "Main",
+        "width": "grow",
+        "menu": { "label": "Menu", "closeLabel": "Close menu" },
+        "items": [
+          {
+            "label": "Products",
+            "sections": [
+              {
+                "heading": "Frontier AI Labs",
+                "items": [
+                  { "label": "Models", "href": "https://pc.0g.ai/models", "external": true, "description": "Open and frontier models running on 0G, including our own 0GM-1.0" },
+                  { "label": "Alignment", "href": "https://docs.0g.ai/concepts/ai-alignment", "external": true, "description": "Alignment methods built for sparse inference" },
+                  { "label": "Agentic ID", "href": "https://build.0g.ai/agentic-id", "external": true, "description": "Verifiable onchain identity for autonomous AI agents." }
+                ]
+              },
+              {
+                "heading": "Verifiable AI Stack",
+                "items": [
+                  { "label": "Private Computer", "href": "https://pc.0g.ai", "external": true, "description": "Run private, sovereign, verifiable AI inference and fine-tuning on a GPU network." },
+                  {
+                    "label": "Storage",
+                    "href": "https://docs.0g.ai/concepts/storage",
+                    "external": true,
+                    "description": "High-throughput storage built for AI datasets, model weights, and live state.",
+                    "links": [
+                      { "label": "About", "href": "https://docs.0g.ai/concepts/storage", "external": true },
+                      { "label": "Storage Scan", "href": "https://storagescan.0g.ai", "external": true }
+                    ]
+                  },
+                  {
+                    "label": "0G Chain",
+                    "href": "https://docs.0g.ai/concepts/chain",
+                    "external": true,
+                    "description": "The 0G Layer 1, an EVM-compatible blockchain built for AI-scale data and transactions. Truth and settlement layer for AI.",
+                    "links": [
+                      { "label": "About", "href": "https://docs.0g.ai/concepts/chain", "external": true },
+                      { "label": "Chain Scan", "href": "https://chainscan.0g.ai", "external": true }
+                    ]
+                  }
+                ]
+              },
+              {
+                "heading": "Applications",
+                "items": [
+                  { "label": "Studio", "href": "https://app.0g.ai", "external": true, "description": "Prompt-based app creation and deployment." },
+                  { "label": "Genome", "href": "https://app.0g.ai/genome", "external": true, "description": "Create a brand instantly from a URL or photo reference point." },
+                  { "label": "Agent Launchpad", "href": "https://app.0g.ai/agent-launchpad", "external": true, "description": "Create and launch autonomous, user-facing AI agents." },
+                  { "label": "Private Chat", "href": "https://app.0g.ai/private-chat", "external": true, "description": "Create an encrypted conversation." }
+                ]
+              }
+            ]
+          },
+          {
+            "label": "Build",
+            "sections": [
+              {
+                "heading": "Learn",
+                "items": [
+                  { "label": "Docs", "href": "https://docs.0g.ai", "external": true, "description": "Everything you need to build on 0G, from core concepts to quickstart guides." },
+                  { "label": "Builder Hub", "href": "https://build.0g.ai", "external": true, "description": "A lighter, guided starting point before diving into full documentation." }
+                ]
+              },
+              {
+                "heading": "Create",
+                "items": [
+                  { "label": "Github", "href": "https://github.com/0gfoundation", "external": true, "description": "Open-source code, SDKs, and community repositories for 0G." },
+                  { "label": "Arena Hackathons", "href": "https://0g.ai/arena", "description": "Hackathons and building competitions for developers on 0G." },
+                  { "label": "Accelerators", "href": "/accelerator", "description": "Funding, mentorship, and go-to-market support for growing AI founders." }
+                ]
+              },
+              {
+                "heading": "Tools",
+                "items": [
+                  { "label": "Chainscan", "href": "https://chainscan.0g.ai", "external": true, "description": "Search transactions, blocks, and contracts on 0G Chain." },
+                  { "label": "Faucet", "href": "https://faucet.0g.ai", "external": true, "description": "Claim free testnet 0G to start building on Galileo." }
+                ]
+              },
+              {
+                "heading": "Contribute to Network",
+                "items": [
+                  { "label": "Validator", "href": "https://docs.0g.ai/run-a-node/validator-node", "external": true, "description": "Requirements, setup, and rewards for running a 0G validator." }
+                ]
+              }
+            ]
+          },
+          {
+            "label": "Enterprise",
+            "sections": [
+              {
+                "heading": "Products",
+                "items": [
+                  { "label": "Overview", "href": "/pc/enterprise", "description": "Why teams run AI on infrastructure they can verify." }
+                ]
+              },
+              {
+                "heading": "Solutions",
+                "items": [
+                  { "label": "Compute Network", "href": "https://pc.0g.ai", "external": true, "description": "AI models on a decentralized, verifiable network. No middlemen, no markup." },
+                  { "label": "Private Computer", "href": "https://pc.0g.ai", "external": true, "description": "Run models on encrypted data — nothing leaves your control." },
+                  { "label": "0G App", "href": "https://app.0g.ai", "external": true, "description": "Try 0G's AI services before you integrate them." }
+                ]
+              }
+            ]
+          },
+          {
+            "label": "Finance",
+            "sections": [
+              {
+                "heading": "Transfer",
+                "items": [
+                  { "label": "Get 0G Token", "href": "https://get.0g.ai", "external": true, "description": "Find your route to 0G: every path, with fees and wait times upfront." },
+                  { "label": "Bridge and Swap", "href": "https://hub.0g.ai/bridge", "external": true, "description": "Move 0G across chains and track your portfolio in one place." }
+                ]
+              },
+              {
+                "heading": "Finance Apps",
+                "items": [
+                  { "label": "Ascend", "href": "https://ascend.finance", "external": true, "description": "Stake 0G, receive a0G, and keep it liquid across DeFi." },
+                  { "label": "iAI - Infinite AI", "href": "https://iai.finance", "external": true, "description": "Turn staked 0G into compute credits for 0G's AI services." },
+                  { "label": "Comfy", "href": "https://comfy.fun", "external": true }
+                ]
+              }
+            ]
+          },
+          {
+            "label": "Company",
+            "sections": [
+              {
+                "heading": "About",
+                "items": [
+                  { "label": "Research", "href": "https://research.0g.ai", "external": true, "description": "Published papers, active research areas, and our university partners." },
+                  { "label": "Partners & Projects", "href": "/partners", "description": "Explore 300+ projects and partners building on the 0G network." }
+                ]
+              },
+              {
+                "heading": "Newsroom",
+                "items": [
+                  { "label": "Blog", "href": "/blog", "description": "Protocol updates, technical deep dives, and ecosystem news." },
+                  { "label": "Press", "href": "/press", "description": "Coverage of 0G from journalists and industry media." },
+                  { "label": "Ask Me Anything", "href": "/ama", "description": "Recordings and recaps from our community AMA sessions." }
+                ]
+              },
+              {
+                "heading": "Tools",
+                "items": [
+                  { "label": "FAQ", "href": "/faq", "description": "Common questions about 0G, the token, and the network." },
+                  { "label": "Verify 0G Handles", "href": "https://verify.0g.ai", "external": true, "description": "Check whether an account is officially ours before you trust it." },
+                  { "label": "Brand Kit & Guidelines", "href": "/brandkit", "description": "Logos, wordmarks, and guidelines for using the 0G brand." }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

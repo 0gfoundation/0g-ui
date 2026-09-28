@@ -2,8 +2,8 @@
 
 The shared 0G site shell as a package, `@0gfoundation/0g-ui`. Born from
 `0gfoundation/0g-hub` ADR-0012 (read it first: `docs/adr/0012-shared-site-shell.md`
-there, work in hub issue #457). The hub is one consumer; `0g-site` is the
-next.
+there, work in hub issue #457). The sites that install it are listed in
+`consumers.json`.
 
 ## Boundary
 
@@ -60,6 +60,15 @@ Three rules keep it portable (ADR-0012 §2):
   `/compare` shows both and diffs every computed style in the shell
 - `docs/spec/phone-shell-measurements-2026-09-21.md` — what the phone
   shell does and the evidence for each rule, moved with the behaviour
+- `consumers.json` — every site that installs the package: its repo, its
+  CSS entry and themes, and what its header passes (nav entries and menu
+  verbatim, the logo and controls as stubs of their size). `source` in
+  each entry names the site's files it mirrors
+- `tools/consumer-diff/` — renders each site in `consumers.json` from two
+  builds of the package and reports what changes for it: the header's and
+  tab bar's markup, screenshots of every state, the gzipped JS and CSS,
+  the declarations. `.github/workflows/consumer-diff.yml` posts it on
+  every PR
 
 ## Laws
 
@@ -74,6 +83,12 @@ Three rules keep it portable (ADR-0012 §2):
 - The tokens the shell reads are the documented set in
   `shell.source.css` and nothing else.
 - A visual change is a package release plus a tag bump in each site.
+- `consumers.json` mirrors the sites. A site that adopts the package, or
+  changes what its header passes (nav entries, controls, `width`, `menu`,
+  its CSS entry, a token override), gets its entry updated in the same
+  change. The consumer diff can only report on what the entry holds.
+- Read the consumer diff's comment before merging. A difference is not a
+  failure, but every one should be one the PR meant.
 
 ## Commands
 
@@ -86,6 +101,18 @@ pnpm typecheck · pnpm lint · pnpm test · pnpm build
 `pnpm build` emits `packages/0g-ui/dist` (JS, declarations, `shell.css`)
 and builds the playground. The package's `prepare` script runs the same
 build, so a git install of the package (what the sites do) gets `dist`.
+
+```bash
+pnpm consumer-diff                     # the working tree against its merge base with origin/main
+pnpm consumer-diff --head <ref>        # a branch or commit instead of the working tree
+pnpm consumer-diff --only hub --images all   # every state's picture, to check an entry
+```
+
+The first run needs Chromium once:
+`pnpm --filter @0gfoundation/0g-ui-consumer-diff exec playwright install chromium`.
+The report and images land in `tools/consumer-diff/.work/report/`. The
+base side builds in a throwaway worktree with its own install and is
+kept until the base moves.
 
 ## Release
 
