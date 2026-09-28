@@ -1,4 +1,4 @@
-import { mkdirSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 
 import tailwindcss from "@tailwindcss/vite";
@@ -7,6 +7,9 @@ import { defineConfig, type InlineConfig } from "vite";
 
 const here = fileURLToPath(new URL(".", import.meta.url));
 const repo = fileURLToPath(new URL("../../", import.meta.url));
+
+/** Where run.ts writes the sites it read, resolved for rendering. */
+export const RESOLVED = `${here}.work/consumers.json`;
 
 /**
  * The fixture page built against one side of a diff. `shell` and `theme`
@@ -33,6 +36,7 @@ export function harnessConfig(o: {
         { find: /^@0gfoundation\/0g-ui\/shell$/, replacement: o.shell },
         { find: /^@0gfoundation\/0g-ui\/theme$/, replacement: o.theme },
         { find: /^@host\.css$/, replacement: o.hostCss },
+        { find: /^@consumers$/, replacement: RESOLVED },
       ],
       dedupe: ["react", "react-dom"],
     },
@@ -41,13 +45,15 @@ export function harnessConfig(o: {
 }
 
 /**
- * `pnpm --filter @0gfoundation/0g-ui-consumer-diff dev`: the fixtures on
- * the working tree's sources, `/?consumer=<name>&theme=light|dark`, for
- * looking at an entry by hand. Without the sites' own hostCss.
+ * `pnpm --filter @0gfoundation/0g-ui-consumer-diff dev`: the sites the
+ * last `pnpm consumer-diff` read, on the working tree's sources,
+ * `/?consumer=<name>&theme=light|dark`, for looking at a manifest by hand.
+ * Without the sites' own hostCss.
  */
 export default defineConfig(() => {
   const dir = `${here}.work/dev`;
   mkdirSync(dir, { recursive: true });
+  if (!existsSync(RESOLVED)) writeFileSync(RESOLVED, JSON.stringify({ consumers: [] }));
   const hostCss = `${dir}/host.css`;
   writeFileSync(
     hostCss,

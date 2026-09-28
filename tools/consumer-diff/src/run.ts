@@ -2,17 +2,20 @@
  * The consumer diff: what a change to the package changes for each site
  * that installs it, before any site repins.
  *
- *   pnpm consumer-diff [--base <ref>] [--head <ref>] [--only <site>] [--images all] [--out <dir>]
+ *   pnpm consumer-diff [--base <ref>] [--head <ref>] [--only <site>] [--images all]
+ *                      [--site <name>=<ref>] [--local <name>=<dir>] [--out <dir>]
  *
  * Builds the package at two refs, base (default: the merge base with
- * origin/main) and head (default: the working tree), then renders every
- * site in consumers.json from each build, as the site imports it, and
- * compares the two: the header's and tab bar's markup, screenshots of
- * each state at phone and desktop widths in each of the site's themes,
- * the gzipped JS and CSS a page carries, and the package's declarations.
- * Writes report.md, the full diffs and a base, head and pixel-diff image
- * for every state that changed. It reports differences; it never fails
- * on them. CI posts the report on the PR (.github/workflows/consumer-diff.yml).
+ * origin/main) and head (default: the working tree). Reads each site in
+ * consumers.json from the manifest in its own repository (manifest.ts),
+ * renders it from each build as the site imports it, and compares the
+ * two: the header's and tab bar's markup, screenshots of each state at
+ * phone and desktop widths in each of the site's themes, the gzipped JS
+ * and CSS a page carries, and the package's declarations. Writes
+ * report.md, the full diffs and a base, head and pixel-diff image for
+ * every state that changed. It reports differences and sites it could
+ * not read. It never fails on them. CI posts the report on the PR
+ * (.github/workflows/consumer-diff.yml).
  */
 import { spawnSync } from "node:child_process";
 import {
@@ -37,8 +40,9 @@ import { chromium, type Browser, type Page } from "playwright";
 import { PNG } from "pngjs";
 import { build } from "vite";
 
-import { harnessConfig } from "../vite.config.ts";
-import { checkRegistry, isGroupEntry, type Consumer, type Registry } from "./registry.ts";
+import { harnessConfig, RESOLVED } from "../vite.config.ts";
+import { readConsumer, type Source } from "./manifest.ts";
+import { checkConsumer, checkRegistry, isGroupEntry, type Consumer, type Registry } from "./registry.ts";
 
 const here = fileURLToPath(new URL("../", import.meta.url));
 const repo = fileURLToPath(new URL("../../../", import.meta.url));
@@ -344,6 +348,8 @@ type SiteResult = {
   states: StateResult[];
   markupDiff: string;
   sizes: Record<Side, Sizes>;
+  /** What the head build cannot give the site's manifest. */
+  problems: string[];
 };
 
 // ---------------------------------------------------------------------------
@@ -379,6 +385,7 @@ function report(o: {
   base: string;
   head: string;
   sites: SiteResult[];
+  unread: { name: string; reason: string }[];
   dtsDiff: string;
   artifact?: string;
   clipAt?: number;
@@ -386,19 +393,32 @@ function report(o: {
   const clipAt = o.clipAt ?? 250;
   const out: string[] = ["<!-- 0g-ui-consumer-diff -->", "### What this changes for each site", ""];
   const unchanged = (s: SiteResult) =>
+    s.problems.length === 0 &&
     s.markupDiff === "" &&
     s.states.every((st) => st.pixels === 0) &&
     s.sizes.base.js === s.sizes.head.js &&
     s.sizes.base.css === s.sizes.head.css;
 
   out.push(
-    `Each site in \`consumers.json\`, rendered from \`${o.base}\` and from \`${o.head}\` the way it imports the package. ` +
-      "A site sees these changes when it repins to a release that has them.",
+    `Each site in \`consumers.json\`, read from its own manifest and rendered from \`${o.base}\` and from \`${o.head}\` ` +
+      "the way it imports the package. A site sees these changes when it repins to a release that has them.",
     "",
   );
+  if (o.unread.length > 0) {
+    out.push(o.sites.length === 0 ? "No site could be read:" : "Not read, so not compared:", "");
+    for (const u of o.unread) out.push(`- \`${u.name}\`: ${u.reason}`);
+    out.push("");
+  }
+  if (o.sites.length === 0) return out.join("\n") + "\n";
   if (o.sites.every(unchanged) && o.dtsDiff === "") {
-    out.push(`No site sees a change. Markup, screenshots, bytes and declarations are identical for all ${o.sites.length}.`);
+    const all = o.sites.length === 1 ? `\`${o.sites[0].consumer.name}\`` : `all ${o.sites.length} sites read`;
+    out.push(`No site sees a change. Markup, screenshots, bytes and declarations are identical for ${all}.`);
     return out.join("\n") + "\n";
+  }
+  for (const s of o.sites.filter((x) => x.problems.length > 0)) {
+    out.push(`**\`${s.consumer.name}\` asks for what this build does not have:**`, "");
+    for (const p of s.problems) out.push(`- ${p}`);
+    out.push("");
   }
 
   out.push("| Site | Markup | Screenshots | JS | CSS |", "| --- | --- | --- | --- | --- |");
@@ -455,14 +475,23 @@ async function main() {
       base: { type: "string" },
       head: { type: "string" },
       only: { type: "string" },
-      // "all" keeps every state's picture, for checking a consumers.json entry.
+      // "all" keeps every state's picture, for checking a site's manifest.
       images: { type: "string", default: "changed" },
       // What the report calls the head: CI builds a PR's merge result and
       // names it by the PR's own head commit.
       "head-label": { type: "string" },
+      // `name=ref`: read a site's manifest from another branch, to see a
+      // site change that has not merged. Repeatable.
+      site: { type: "string", multiple: true },
+      // `name=dir`: read it from a local checkout instead of GitHub.
+      local: { type: "string", multiple: true },
       out: { type: "string" },
     },
   });
+  const pairs = (list: string[] | undefined) =>
+    new Map((list ?? []).map((p) => [p.slice(0, p.indexOf("=")), p.slice(p.indexOf("=") + 1)] as const));
+  const refs = pairs(values.site);
+  const dirs = pairs(values.local);
   const baseRef = git("rev-parse", "--verify", `${values.base ?? git("merge-base", "origin/main", "HEAD")}^{commit}`);
   const headRef = values.head ? git("rev-parse", "--verify", `${values.head}^{commit}`) : null;
   const dirty = headRef === null && git("status", "--porcelain", "--", "packages/0g-ui") !== "";
@@ -480,11 +509,28 @@ async function main() {
   };
 
   const registry = JSON.parse(readFileSync(join(repo, "consumers.json"), "utf8")) as Registry;
+  const registryProblems = checkRegistry(registry);
+  if (registryProblems.length > 0) throw new Error(registryProblems.join("\n"));
+  const entries = registry.consumers.filter((c) => !values.only || c.name === values.only);
+  if (entries.length === 0) throw new Error(`no consumer named ${values.only}`);
+
+  // Each site's manifest, from its repository. A site that cannot be read
+  // (no manifest yet, no token) is reported, and the rest still run.
+  const consumers: Consumer[] = [];
+  const unread: { name: string; reason: string }[] = [];
+  for (const entry of entries) {
+    const dir = dirs.get(entry.name);
+    const source: Source = dir ? { kind: "local", dir } : { kind: "github", ref: refs.get(entry.name) ?? entry.ref };
+    try {
+      consumers.push(readConsumer(entry, source));
+    } catch (error) {
+      unread.push({ name: entry.name, reason: (error as Error).message.split("\n")[0] });
+      console.log(`  ${entry.name}: not read: ${(error as Error).message.split("\n")[0]}`);
+    }
+  }
+  mkdirSync(dirname(RESOLVED), { recursive: true });
+  writeFileSync(RESOLVED, JSON.stringify({ consumers }, null, 2));
   const headExports = (await import(pathToFileURL(join(pkgs.head, "dist/index.js")).href)) as Record<string, unknown>;
-  const problems = checkRegistry(registry, headExports);
-  if (problems.length > 0) throw new Error(problems.join("\n"));
-  const consumers = registry.consumers.filter((c) => !values.only || c.name === values.only);
-  if (consumers.length === 0) throw new Error(`no consumer named ${values.only}`);
 
   const sizes = new Map<string, Record<Side, Sizes>>();
   for (const c of consumers) {
@@ -569,7 +615,7 @@ async function main() {
       for (const side of SIDES) writeFileSync(join(siteDir, `markup.${side}.html`), markup[side].join("\n"));
       const markupDiff = diffPaths(siteDir, `markup.base.html`, `markup.head.html`, ["-U2"]);
       if (markupDiff) writeFileSync(join(siteDir, "markup.diff"), markupDiff);
-      sites.push({ consumer: c, states, markupDiff, sizes: sizes.get(c.name)! });
+      sites.push({ consumer: c, states, markupDiff, sizes: sizes.get(c.name)!, problems: checkConsumer(c, headExports) });
     }
   } finally {
     await browser.close();
@@ -595,7 +641,7 @@ async function main() {
   const artifact = run
     ? `${process.env.GITHUB_SERVER_URL}/${process.env.GITHUB_REPOSITORY}/actions/runs/${run}`
     : undefined;
-  const md = fittedReport({ base: baseRef.slice(0, 7), head: headLabel, sites, dtsDiff, artifact });
+  const md = fittedReport({ base: baseRef.slice(0, 7), head: headLabel, sites, unread, dtsDiff, artifact });
   writeFileSync(join(outDir, "report.md"), md);
   console.log(`\n${md}\nconsumer-diff: report at ${join(outDir, "report.md")}`);
 }

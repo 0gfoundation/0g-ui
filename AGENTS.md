@@ -60,15 +60,16 @@ Three rules keep it portable (ADR-0012 §2):
   `/compare` shows both and diffs every computed style in the shell
 - `docs/spec/phone-shell-measurements-2026-09-21.md` — what the phone
   shell does and the evidence for each rule, moved with the behaviour
-- `consumers.json` — every site that installs the package: its repo, its
-  CSS entry and themes, and what its header passes (nav entries and menu
-  verbatim, the logo and controls as stubs of their size). `source` in
-  each entry names the site's files it mirrors
-- `tools/consumer-diff/` — renders each site in `consumers.json` from two
-  builds of the package and reports what changes for it: the header's and
-  tab bar's markup, screenshots of every state, the gzipped JS and CSS,
-  the declarations. `.github/workflows/consumer-diff.yml` posts it on
-  every PR
+- `consumers.json` — every site that installs the package: its repo, the
+  ref to read, and the path of its manifest. Nothing about a site's header
+  is copied here
+- `tools/consumer-diff/` — reads each site's manifest from the site's
+  repository (`gh`, or `GH_CONSUMERS_TOKEN` in CI), renders the site from
+  two builds of the package and reports what changes for it: the header's
+  and tab bar's markup, screenshots of every state, the gzipped JS and
+  CSS, the declarations. `.github/workflows/consumer-diff.yml` posts it on
+  every PR. The manifest's shape is `Manifest` in `src/registry.ts`, and
+  the README has it annotated
 
 ## Laws
 
@@ -83,10 +84,14 @@ Three rules keep it portable (ADR-0012 §2):
 - The tokens the shell reads are the documented set in
   `shell.source.css` and nothing else.
 - A visual change is a package release plus a tag bump in each site.
-- `consumers.json` mirrors the sites. A site that adopts the package, or
-  changes what its header passes (nav entries, controls, `width`, `menu`,
-  its CSS entry, a token override), gets its entry updated in the same
-  change. The consumer diff can only report on what the entry holds.
+- A site's shell config lives in its manifest, in the site's repository,
+  and its header reads from it. Never copy a site's nav, labels or CSS
+  into this repository. A site that adopts the package adds a manifest
+  and a row in `consumers.json`, and `GH_CONSUMERS_TOKEN` gains read on
+  its repository. A change to the manifest's shape is a change to every
+  site's manifest, so it lands in `registry.ts` with the sites' PRs.
+- A manifest imports types and nothing else. The diff evaluates it on
+  its own, with no site dependencies installed.
 - Read the consumer diff's comment before merging. A difference is not a
   failure, but every one should be one the PR meant.
 
@@ -105,7 +110,9 @@ build, so a git install of the package (what the sites do) gets `dist`.
 ```bash
 pnpm consumer-diff                     # the working tree against its merge base with origin/main
 pnpm consumer-diff --head <ref>        # a branch or commit instead of the working tree
-pnpm consumer-diff --only hub --images all   # every state's picture, to check an entry
+pnpm consumer-diff --only hub --images all   # every state's picture, to check a manifest
+pnpm consumer-diff --site hub=<branch>       # a site's manifest from a branch not yet merged
+pnpm consumer-diff --local hub=../0g-hub     # or from a local checkout
 ```
 
 The first run needs Chromium once:

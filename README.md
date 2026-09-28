@@ -11,8 +11,8 @@ with its own colours, menu, title and lockup.
   where the phone measurements are taken
 - `docs/spec/phone-shell-measurements-2026-09-21.md` — what the phone
   shell does on scroll and the evidence for each rule
-- `consumers.json` — the sites that install the package and what their
-  headers pass it
+- `consumers.json` — the sites that install the package, and where each
+  keeps its manifest
 - `tools/consumer-diff/` — what a change does to each of those sites
 
 ## Working on it
@@ -45,10 +45,10 @@ measurements document.
 ## What a change does to the sites
 
 Each site pins a release, so nothing here reaches it until it repins. The
-consumer diff says what it will see when it does. On every PR it renders
-each site in `consumers.json` from the PR's merge result and from its
-base, the way that site imports the package, and comments with the
-difference:
+consumer diff says what it will see when it does. On every PR it reads
+each site's manifest from the site's own repository, renders that site
+from the PR's merge result and from its base the way the site imports
+the package, and comments with the difference:
 
 - the header's and tab bar's markup, as a diff
 - screenshots of every state at phone and desktop widths in each of the
@@ -67,12 +67,48 @@ it: its CSS beside the entry, its types, its build. Building each site
 against a PR is #4, for when there are more sites than one person checks
 by hand.
 
-`consumers.json` is only as good as it is current. Each entry mirrors a
-site's header: nav entries and menu verbatim, the lockup and controls as
-stubs of their size, the CSS entry, the themes, the site's own CSS that
-reaches the shell. `source` names the files it came from. When a site
-adopts the package or changes what its header passes, its entry changes
-with it.
+### The manifest
+
+`consumers.json` only lists the sites: repository, the ref to read, and
+the path of the site's manifest. Everything about a site's header lives
+in the site, in a TypeScript module that exports `manifest`:
+
+```ts
+export const manifest = {
+  css: "tailwind.css",                 // or "shell.css" for a host without Tailwind
+  themes: ["light", "dark"],           // "dark" only if something stamps data-theme
+  messages: { file: "messages/en.json", namespace: "nav" }, // optional: labels are keys in it
+  header: { navLabel, items, width, menu },  // what the site's header passes the shell
+  tabBar: { label },                   // if it renders the phone tab bar
+  fixture: {                           // for the diff alone
+    path: "/swap",                     // the page it stands on, for the active entry
+    logo: { label, width, height },    // the site's lockup, as a block its size
+    title, controls, layout, hostCss,  // controls as sized stubs, CSS that reaches the shell
+  },
+} as const;
+```
+
+The site's header reads `header` and `tabBar` from this module, so what
+the diff renders is what the site renders, and nothing can drift. Icons
+are named by their export (`"DiscoverIcon"`). The diff fetches the file
+and evaluates it on its own, so it may import types and nothing else.
+`fixture` is the one part the site keeps by hand: when its lockup,
+controls or CSS change, it changes there, in the same PR.
+
+The hub's is `src/components/shell/0g-ui.manifest.ts` and 0g-site's is
+`src/components/0g-ui.manifest.ts`. A new site adds a manifest and a row
+in `consumers.json`, and `GH_CONSUMERS_TOKEN` (a fine-grained token with
+Contents read on each listed repository, in this repository's Actions
+secrets) gains the new repository. A site that cannot be read shows in
+the comment as not read, and the rest still run.
+
+To see a site change before it merges, read its manifest from a branch
+or a checkout:
+
+```bash
+pnpm consumer-diff --site hub=my-branch
+pnpm consumer-diff --local hub=../0g-hub
+```
 
 ## Releasing
 

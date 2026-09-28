@@ -4,9 +4,9 @@ import { createRoot } from "react-dom/client";
 // (its body's background and type) win over the fixture's defaults.
 import "./page.css";
 import "@host.css";
-import registry from "../../../consumers.json";
+import resolved from "@consumers";
 import { Fixture } from "./fixture";
-import type { Registry } from "./registry";
+import type { Consumer } from "./registry";
 
 /**
  * `?consumer=<name>&theme=light|dark`. The theme is stamped and stored
@@ -14,7 +14,8 @@ import type { Registry } from "./registry";
  * button and the dark tokens agree from the first paint.
  */
 const params = new URLSearchParams(window.location.search);
-const consumers = (registry as Registry).consumers;
+// run.ts wrote these from resolveManifest, so they are Consumers.
+const consumers = resolved.consumers as Consumer[];
 const name = params.get("consumer") ?? consumers[0]?.name;
 const consumer = consumers.find((c) => c.name === name);
 const theme = params.get("theme") === "dark" ? "dark" : "light";
@@ -30,5 +31,5 @@ const root = createRoot(document.getElementById("root")!);
 if (consumer) {
   root.render(<Fixture consumer={consumer} />);
 } else {
-  root.render(<p>No consumer named {name} in consumers.json.</p>);
+  root.render(<p>No site named {name} has been read. Run pnpm consumer-diff first.</p>);
 }

@@ -1,8 +1,9 @@
 name: Consumer diff
 
 # What a PR changes for each site in consumers.json, before any site
-# repins: the header and tab bar rendered from the PR's merge result and
-# from its base, compared as markup, screenshots, bytes and declarations
+# repins: each site's header, read from the manifest in its own
+# repository, rendered from the PR's merge result and from its base and
+# compared as markup, screenshots, bytes and declarations
 # (tools/consumer-diff). One comment on the PR, rewritten on every push.
 # Informational: it fails only when the harness itself breaks, never on
 # a difference.
@@ -37,9 +38,14 @@ jobs:
         run: pnpm --filter @0gfoundation/0g-ui-consumer-diff exec playwright install --with-deps chromium
       # The checkout is the PR merged into its base, and its first parent
       # is the base as it stood: the diff is what merging would change.
+      # Each site's manifest is read from its own repository. A workflow's
+      # own token cannot read a sibling repository, so GH_CONSUMERS_TOKEN
+      # is a fine-grained token with Contents read on every repository in
+      # consumers.json. Without it every site reports "not read".
       - name: Diff
         env:
           HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          GH_TOKEN: ${{ secrets.GH_CONSUMERS_TOKEN }}
         run: pnpm consumer-diff --base HEAD^1 --head-label "${HEAD_SHA:0:7}" --out "$RUNNER_TEMP/consumer-diff"
       - uses: actions/upload-artifact@v4
         if: always()
