@@ -3,14 +3,14 @@
     {
       "name": "hub",
       "repo": "0gfoundation/0g-hub",
-      "ref": "0g-ui-manifest",
+      "ref": "main",
       "manifest": "src/components/shell/0g-ui.manifest.ts",
       "url": "https://hub.0g.ai"
     },
     {
       "name": "0g-site",
       "repo": "0gfoundation/0g-site",
-      "ref": "0g-ui-manifest",
+      "ref": "navbar-change",
       "manifest": "src/components/0g-ui.manifest.ts",
       "url": "https://0g.ai"
     }
