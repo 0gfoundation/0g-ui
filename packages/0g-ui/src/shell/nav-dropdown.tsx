@@ -199,7 +199,7 @@ export function PanelLink({
   const className = cx(
     "inline-flex items-center font-medium transition-colors hover:text-nav-title-hover",
     focusRing,
-    size === "panel" ? "gap-2 text-[16px] leading-6" : "min-h-10 gap-1.5 text-[16px] leading-5",
+    size === "panel" ? "gap-2 text-[16px] leading-6" : "min-h-9 gap-1.5 text-[16px] leading-5",
   );
   const chevron = <ChevronRightIcon size={size === "panel" ? 16 : 14} />;
   if (item.external) {

@@ -1,6 +1,6 @@
 {
   "name": "@0gfoundation/0g-ui",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "The shared 0G site shell (ADR-0012 in 0g-hub): the header, the phone tab bar and their scroll behaviour, the tokens they read, and the theme mechanism as an optional entry",
   "license": "UNLICENSED",
   "private": false,

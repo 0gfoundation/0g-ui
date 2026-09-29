@@ -21,7 +21,7 @@ host's.
 As a git dependency pinned to a release tag, with pnpm:
 
 ```json
-"@0gfoundation/0g-ui": "git+https://github.com/0gfoundation/0g-ui.git#0g-ui-v0.3.0&path:packages/0g-ui"
+"@0gfoundation/0g-ui": "git+https://github.com/0gfoundation/0g-ui.git#0g-ui-v0.4.0&path:packages/0g-ui"
 ```
 
 pnpm is required. `&path:packages/0g-ui` is a pnpm extension, and npm
@@ -153,14 +153,14 @@ const items: ShellNavEntry[] = [
   close button at the corner. One group is open at a time; hover opens
   it for a mouse, click and keyboard for everything else, Escape and a
   click outside close it.
-- `menu` adds a round menu button below lg that opens the same items as
-  a modal dialog over the dimmed page, as tall as its content: a sheet
-  from the top on phones, a 380px card at the corner from sm. Groups
-  are disclosures with their section headings, `aside` follows the list,
-  `footer` closes the sheet. It locks the page's scroll, keeps focus
-  inside, and closes on navigation, a followed link, Escape, a tap on
-  the dimmed page, and when the viewport reaches lg. It is portalled to
-  `<body>`, hence the `react-dom` peer.
+- `menu` adds a round menu button below lg (or md, see `collapse`) that
+  opens the same items full screen as a modal dialog: groups are
+  disclosures with their section headings and the links as titles only
+  (descriptions and secondary links stay in the desktop panels), `aside`
+  follows the list, `footer` stays at the bottom over a hairline. It
+  locks the page's scroll, keeps focus inside, and closes on navigation,
+  a followed link, Escape, and when the viewport reaches the bar. It is
+  portalled to `<body>`, hence the `react-dom` peer.
 - `width="grow"` keeps the drafts' 1000px bar up to their 1440px frame
   and then grows it at the drafts' proportion of the page (70%), for a
   site whose content runs full width; group panels always span the bar,
