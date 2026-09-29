@@ -2,6 +2,7 @@
 
 import { useCallback, useState } from "react";
 
+import { type ShellCollapse } from "./collapse";
 import { cx } from "./cx";
 import { OutboundIcon } from "./glyphs";
 import { isActive, isGroup, type ShellNavEntry } from "./items";
@@ -17,7 +18,17 @@ import { useShell } from "./provider";
  * (ShellGroup) renders as a NavDropdown in the same row, one open at a
  * time.
  */
-export function TopNav({ items, label }: { items: readonly ShellNavEntry[]; label: string }) {
+export function TopNav({
+  items,
+  label,
+  collapse = "lg",
+}: {
+  items: readonly ShellNavEntry[];
+  label: string;
+  /** SiteHeader's `collapse`: from md a group panel narrows to two
+   *  columns until lg. */
+  collapse?: ShellCollapse;
+}) {
   const { Link, pathname } = useShell();
   // One group open at a time, closed by navigation.
   const [openGroup, setOpenGroup] = useState<string | null>(null);
@@ -42,6 +53,7 @@ export function TopNav({ items, label }: { items: readonly ShellNavEntry[]; labe
               key={item.label}
               group={item}
               open={openGroup === item.label}
+              narrow={collapse === "md"}
               onOpenChange={(open) => onOpenChange(item.label, open)}
             />
           );

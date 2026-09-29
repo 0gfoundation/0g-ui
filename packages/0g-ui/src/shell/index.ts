@@ -8,6 +8,7 @@
  * shell.css; the theme mechanism is the `./theme` entry.
  */
 export { isIosSafari, SHELL_BOOTSTRAP } from "./bootstrap";
+export { type ShellCollapse } from "./collapse";
 export * from "./icons";
 export {
   isActive,

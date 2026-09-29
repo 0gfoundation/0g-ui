@@ -2,6 +2,8 @@
 
 import { useEffect } from "react";
 
+import { COLLAPSE_QUERY, type ShellCollapse } from "./collapse";
+
 import {
   FADE_DISTANCE,
   HEADER_HEIGHT,
@@ -43,10 +45,10 @@ const REST_MS = 150;
  *   ahead of the pill (docs/spec/phone-shell-measurements-2026-09-21.md
  *   §4).
  */
-export function ShellScroll() {
+export function ShellScroll({ collapse = "lg" }: { collapse?: ShellCollapse } = {}) {
   useEffect(() => {
     const root = document.documentElement;
-    const phone = window.matchMedia("(width < 64rem)");
+    const phone = window.matchMedia(COLLAPSE_QUERY[collapse].phone);
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)");
 
     let state: ShellState = INITIAL;
@@ -231,6 +233,6 @@ export function ShellScroll() {
       phone.removeEventListener("change", arm);
       disarm();
     };
-  }, []);
+  }, [collapse]);
   return null;
 }

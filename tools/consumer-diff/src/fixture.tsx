@@ -94,6 +94,7 @@ export function Fixture({ consumer }: { consumer: Consumer }) {
     ) : undefined,
   };
   if (header.width) headerProps.width = header.width;
+  if (header.collapse) headerProps.collapse = header.collapse;
   if (header.menu) headerProps.menu = header.menu;
 
   const page = (
@@ -114,7 +115,7 @@ export function Fixture({ consumer }: { consumer: Consumer }) {
         </main>
       </div>
       {tabBar && TabBar ? createElement(TabBar, { items, label: tabBar.label }) : null}
-      {ShellScroll ? createElement(ShellScroll) : null}
+      {ShellScroll ? createElement(ShellScroll, header.collapse ? { collapse: header.collapse } : {}) : null}
     </>
   );
   return createElement(ShellProvider, { pathname: consumer.path }, page);

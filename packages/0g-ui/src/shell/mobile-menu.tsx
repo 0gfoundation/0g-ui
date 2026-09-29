@@ -11,6 +11,7 @@ import {
 } from "react";
 import { createPortal } from "react-dom";
 
+import { COLLAPSE_CLASSES, COLLAPSE_QUERY, type ShellCollapse } from "./collapse";
 import { cx } from "./cx";
 import { ChevronRightIcon, CloseIcon, MenuIcon, OutboundIcon } from "./glyphs";
 import { isActive, isGroup, isGroupActive, type ShellGroup, type ShellNavEntry } from "./items";
@@ -50,6 +51,7 @@ export function MobileMenu({
   closeLabel,
   aside,
   footer,
+  collapse = "lg",
 }: {
   logo: ReactNode;
   items: readonly ShellNavEntry[];
@@ -59,6 +61,9 @@ export function MobileMenu({
   closeLabel: string;
   aside?: ReactNode;
   footer?: ReactNode;
+  /** SiteHeader's `collapse`: the width from which the bar replaces the
+   *  menu. */
+  collapse?: ShellCollapse;
 }) {
   const { Link, pathname } = useShell();
   const [open, setOpen] = useState(false);
@@ -88,14 +93,14 @@ export function MobileMenu({
     const previous = root.style.overflow;
     root.style.overflow = "hidden";
     dialog.current?.querySelector<HTMLElement>("[data-shell-menu-close]")?.focus();
-    const desktop = window.matchMedia("(width >= 64rem)");
+    const desktop = window.matchMedia(COLLAPSE_QUERY[collapse].desktop);
     const onChange = () => desktop.matches && setOpen(false);
     desktop.addEventListener("change", onChange);
     return () => {
       root.style.overflow = previous;
       desktop.removeEventListener("change", onChange);
     };
-  }, [open]);
+  }, [open, collapse]);
 
   const onKeyDown = (event: ReactKeyboardEvent) => {
     if (event.key === "Escape") {
@@ -132,7 +137,8 @@ export function MobileMenu({
         aria-controls={dialogId}
         onClick={() => setOpen(true)}
         className={cx(
-          "inline-flex size-8 cursor-pointer items-center justify-center rounded-full border border-nav-line bg-control text-ink lg:hidden",
+          "inline-flex size-8 cursor-pointer items-center justify-center rounded-full border border-nav-line bg-control text-ink",
+          COLLAPSE_CLASSES[collapse].hideOnDesktop,
           focus,
         )}
       >
@@ -148,7 +154,7 @@ export function MobileMenu({
             aria-label={label}
             onKeyDown={onKeyDown}
             onClick={onClick}
-            className="shell-menu fixed inset-0 z-50 lg:hidden"
+            className={cx("shell-menu fixed inset-0 z-50", COLLAPSE_CLASSES[collapse].hideOnDesktop)}
           >
             {/* The page, dimmed; a tap on it closes the menu. */}
             <div aria-hidden onClick={close} className="absolute inset-0 bg-ink/30" />

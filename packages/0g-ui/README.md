@@ -21,7 +21,7 @@ host's.
 As a git dependency pinned to a release tag, with pnpm:
 
 ```json
-"@0gfoundation/0g-ui": "git+https://github.com/0gfoundation/0g-ui.git#0g-ui-v0.2.0&path:packages/0g-ui"
+"@0gfoundation/0g-ui": "git+https://github.com/0gfoundation/0g-ui.git#0g-ui-v0.3.0&path:packages/0g-ui"
 ```
 
 pnpm is required. `&path:packages/0g-ui` is a pnpm extension, and npm
@@ -165,9 +165,14 @@ const items: ShellNavEntry[] = [
   and then grows it at the drafts' proportion of the page (70%), for a
   site whose content runs full width; group panels always span the bar,
   so their edges line up. The default, `"fixed"`, is 1000px at every width.
+- `collapse="md"` keeps the bar down to 768px instead of 1024px, for a
+  nav that fits a tablet; the menu button, the phone scroll behaviour
+  and the menu's close-on-resize all move with it, so pass the same
+  value to `ShellScroll`. Between 768 and 1024 group panels show at most
+  two columns. The default, `"lg"`, is the drafts'.
 - `isActive` treats `/` as active on `/` alone.
 
-Without groups, `menu` or `width` the header renders exactly
+Without groups, `menu`, `width` or `collapse` the header renders exactly
 as in 0.1.0.
 
 ### CSS: one entry or the other, never both

@@ -1,6 +1,6 @@
 "use client";
 
-import { type PointerEvent as ReactPointerEvent, useEffect, useId, useRef } from "react";
+import { type CSSProperties, type PointerEvent as ReactPointerEvent, useEffect, useId, useRef } from "react";
 
 import { cx } from "./cx";
 import { ChevronIcon, ChevronRightIcon, CloseIcon } from "./glyphs";
@@ -24,17 +24,21 @@ export const focusRing =
  * Controlled by TopNav, which keeps one group open at a time. Opens on
  * click, and on hover for a mouse; Escape closes it and returns focus to
  * the trigger, as does a click outside or focus leaving the group. The
- * panel hangs from the header row (`lg:relative` there), not from the
+ * panel hangs from the header row (relative on the bar), not from the
  * trigger. It is solid, not glass: a backdrop filter inside the bar's
  * own blurs the bar, not the page.
  */
 export function NavDropdown({
   group,
   open,
+  narrow = false,
   onOpenChange,
 }: {
   group: ShellGroup;
   open: boolean;
+  /** Below lg, at most two columns: set for a bar shown on tablets
+   *  (SiteHeader's `collapse="md"`), where four would be too tight. */
+  narrow?: boolean;
   onOpenChange: (open: boolean) => void;
 }) {
   const { pathname } = useShell();
@@ -125,8 +129,18 @@ export function NavDropdown({
       >
         <div className="shell-panel relative rounded-2xl border border-nav-line bg-control p-[30px] shadow-nav-panel">
           <div
-            className="grid gap-x-8 pr-10"
-            style={{ gridTemplateColumns: `repeat(${group.sections.length}, minmax(0, 1fr))` }}
+            className={cx(
+              "grid gap-x-8 pr-10",
+              narrow
+                ? "grid-cols-[repeat(var(--shell-cols-narrow),minmax(0,1fr))] gap-y-8 lg:grid-cols-[repeat(var(--shell-cols),minmax(0,1fr))]"
+                : "grid-cols-[repeat(var(--shell-cols),minmax(0,1fr))]",
+            )}
+            style={
+              {
+                "--shell-cols": group.sections.length,
+                "--shell-cols-narrow": Math.min(group.sections.length, 2),
+              } as CSSProperties
+            }
           >
             {group.sections.map((section, i) => (
               <div key={section.heading ?? i}>
