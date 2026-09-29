@@ -1,0 +1,102 @@
+/*
+ * The fixture page around the shell: plain CSS, never utility classes,
+ * so the host's Tailwind run compiles the shell's classes and nothing
+ * else. The same on both sides of a diff, so it cancels out. A site's
+ * own CSS that reaches the shell is its `hostCss` in consumers.json.
+ */
+*,
+::before,
+::after {
+  box-sizing: border-box;
+}
+html {
+  -webkit-text-size-adjust: 100%;
+  tab-size: 4;
+}
+body {
+  margin: 0;
+  min-height: 100dvh;
+  background: var(--color-bg);
+  color: var(--color-ink);
+  font-family: ui-sans-serif, system-ui, sans-serif;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+.cd-column {
+  display: flex;
+  min-height: 100dvh;
+  margin: 0 auto;
+  flex-direction: column;
+}
+.cd-main {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px 16px calc(6.5rem + env(safe-area-inset-bottom, 0px));
+}
+@media (width >= 64rem) {
+  .cd-main {
+    padding: 40px 32px;
+  }
+}
+/* Content pulled up under the header, 56px and from lg 24px + 56px. */
+.cd-under {
+  margin-top: -56px;
+}
+@media (width >= 64rem) {
+  .cd-under {
+    margin-top: -80px;
+  }
+}
+
+.cd-hero,
+.cd-card {
+  border-radius: 24px;
+  padding: 20px 24px;
+}
+.cd-hero {
+  min-height: 320px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  background: #f5ebff;
+  color: #000;
+}
+.cd-card {
+  background: color-mix(in srgb, var(--color-ink) 5%, transparent);
+}
+.cd-hero h2,
+.cd-card h3 {
+  margin: 0 0 6px;
+  font-size: 17px;
+  font-weight: 600;
+}
+.cd-hero p,
+.cd-card p {
+  margin: 0;
+  font-size: 15px;
+}
+
+/* Stubs for the site's own components: its size, its ink, no more. */
+.cd-stub {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  font: 500 13px/1 ui-sans-serif, system-ui, sans-serif;
+  text-decoration: none;
+}
+.cd-logo {
+  border-radius: 6px;
+  background: var(--color-ink);
+  color: var(--color-bg);
+}
+.cd-control {
+  padding: 0;
+  border: 1px solid color-mix(in srgb, var(--color-ink) 15%, transparent);
+  border-radius: 9999px;
+  background: color-mix(in srgb, var(--color-ink) 6%, transparent);
+  color: var(--color-ink);
+}
