@@ -65,6 +65,23 @@ function run(cmd: string, args: string[], cwd: string): string {
 
 const git = (...args: string[]) => run("git", args, repo);
 
+/** "12.3s" since `from`, for the phase timings in the log. */
+const seconds = (from: number) => `${((Date.now() - from) / 1000).toFixed(1)}s`;
+
+/** `fn` over `items`, at most `size` at once, results in item order. */
+async function pool<T, R>(items: T[], size: number, fn: (item: T) => Promise<R>): Promise<R[]> {
+  const out = new Array<R>(items.length);
+  let next = 0;
+  const worker = async () => {
+    while (next < items.length) {
+      const i = next++;
+      out[i] = await fn(items[i]);
+    }
+  };
+  await Promise.all(Array.from({ length: Math.max(1, Math.min(size, items.length)) }, worker));
+  return out;
+}
+
 /** `git diff --no-index` of two paths under `cwd`: empty when they match. */
 function diffPaths(cwd: string, a: string, b: string, extra: string[] = []): string {
   const result = spawnSync("git", ["diff", "--no-index", "--no-color", ...extra, a, b], { cwd, encoding: "utf8" });
@@ -252,31 +269,80 @@ function statesFor(consumer: Consumer): State[] {
   return states;
 }
 
+/** Frames in a row with nothing moving before a state counts as settled:
+ *  about 200ms, past the driver's 150ms rest timer. */
+const STILL_FRAMES = 12;
+
+/**
+ * Waits until the page is still: no running animation or transition, and
+ * the scroll position and every value the shell's driver writes on <html>
+ * unchanged for STILL_FRAMES frames. The driver's timed stage and the
+ * header's slide are both motion, so a state is shot once they end, not
+ * after a fixed pause. Gives up after three seconds and shoots anyway.
+ *
+ * Plain source, not a function: tsx compiles with keepNames, which wraps
+ * inner functions in a `__name` helper the page does not have.
+ */
+const SETTLE = `new Promise((resolve) => {
+  const root = document.documentElement;
+  const read = () => [
+    root.style.getPropertyValue("--shell-nav"),
+    root.style.getPropertyValue("--shell-t"),
+    root.style.getPropertyValue("--shell-fade"),
+    root.dataset.shellMotion || "",
+    root.dataset.shellPin || "",
+    String(window.scrollY),
+  ].join("|");
+  const started = performance.now();
+  let last = read();
+  let calm = 0;
+  const tick = () => {
+    const now = read();
+    const moving = document.getAnimations().some((a) => a.playState === "running");
+    calm = now === last && !moving ? calm + 1 : 0;
+    last = now;
+    if (calm >= ${STILL_FRAMES} || performance.now() - started > 3000) resolve();
+    else requestAnimationFrame(tick);
+  };
+  requestAnimationFrame(tick);
+})`;
+
+async function settle(page: Page) {
+  await page.evaluate(SETTLE);
+}
+
+/** Clicks a control the rendered header has, and fails at once when it has
+ *  none (a group on a build without groups), rather than after a timeout. */
+async function click(target: ReturnType<Page["locator"]>) {
+  if ((await target.count()) === 0) throw new Error("not in this build");
+  await target.click({ timeout: 3000 });
+}
+
 async function act(page: Page, action: Action, consumer: Consumer) {
   const timeout = 3000;
   switch (action.kind) {
     case "none":
       return;
     case "scroll":
-      // A finger's worth of scroll in steps, so the driver sees a gesture;
-      // then its timers settle (the bar's timed stage, the rest).
+      // A finger's worth of scroll in steps about a frame apart, so the
+      // driver sees a gesture. settle() then waits out its timers.
       for (let i = 0; i < 12; i++) {
         await page.evaluate(() => window.scrollBy(0, 80));
-        await page.waitForTimeout(40);
+        await page.waitForTimeout(20);
       }
-      await page.waitForTimeout(900);
       return;
     case "group":
-      await page.locator("[data-shell-header] nav").getByRole("button", { name: action.label, exact: true }).click({ timeout });
+      await click(page.locator("[data-shell-header] nav").getByRole("button", { name: action.label, exact: true }));
       return;
     case "menu":
     case "menuGroup": {
       const label = consumer.header.menu?.label ?? "Menu";
-      await page.getByRole("button", { name: label, exact: true }).click({ timeout });
+      await click(page.getByRole("button", { name: label, exact: true }));
       if (action.kind === "menu") return;
       const group = page.getByRole("dialog").getByRole("button", { name: action.label, exact: true });
+      await group.waitFor({ timeout });
       // The active group starts open; a click would close it.
-      if ((await group.getAttribute("aria-expanded", { timeout })) !== "true") await group.click({ timeout });
+      if ((await group.getAttribute("aria-expanded")) !== "true") await group.click({ timeout });
       return;
     }
   }
@@ -302,7 +368,7 @@ async function capture(browser: Browser, url: string, state: State, consumer: Co
     } catch (error) {
       return { unreachable: (error as Error).message.split("\n")[0] };
     }
-    await page.waitForTimeout(500);
+    await settle(page);
     const png = await page.screenshot({ animations: "disabled", caret: "hide" });
     let markup: string | undefined;
     if (state.markup === "shell") {
@@ -485,6 +551,9 @@ async function main() {
       site: { type: "string", multiple: true },
       // `name=dir`: read it from a local checkout instead of GitHub.
       local: { type: "string", multiple: true },
+      // Pages shot at once. Four keeps a CI runner's two cores busy
+      // without starving the frames settle() counts.
+      workers: { type: "string", default: "4" },
       out: { type: "string" },
     },
   });
@@ -503,10 +572,12 @@ async function main() {
   mkdirSync(outDir, { recursive: true });
 
   console.log(`consumer-diff: base ${baseRef.slice(0, 7)}, head ${headLabel}`);
+  const preparing = Date.now();
   const pkgs: Record<Side, string> = {
     base: prepareSide("base", baseRef),
     head: prepareSide("head", headRef),
   };
+  console.log(`consumer-diff: ${seconds(preparing)} to build both sides of the package`);
 
   const registry = JSON.parse(readFileSync(join(repo, "consumers.json"), "utf8")) as Registry;
   const registryProblems = checkRegistry(registry);
@@ -532,12 +603,14 @@ async function main() {
   writeFileSync(RESOLVED, JSON.stringify({ consumers }, null, 2));
   const headExports = (await import(pathToFileURL(join(pkgs.head, "dist/index.js")).href)) as Record<string, unknown>;
 
+  const building = Date.now();
   const sizes = new Map<string, Record<Side, Sizes>>();
   for (const c of consumers) {
     const entry = {} as Record<Side, Sizes>;
     for (const side of SIDES) entry[side] = await buildPage(c, side, pkgs[side]);
     sizes.set(c.name, entry);
   }
+  console.log(`consumer-diff: ${seconds(building)} to build ${consumers.length * 2} site pages`);
 
   const { origin, server } = await serve(join(work, "pages"));
   const urlFor = (side: Side, c: Consumer, state: State) =>
@@ -553,74 +626,90 @@ async function main() {
     );
   }
 
+  /** One state of one site, shot on both sides and compared. */
+  const compareState = async (c: Consumer, state: State) => {
+    const shots = {} as Record<Side, Capture>;
+    for (const side of SIDES) shots[side] = await capture(browser, urlFor(side, c, state), state, c);
+    const stem = join(outDir, c.name, slugify(state.id));
+    let basePng = shots.base.png;
+    let headPng = shots.head.png;
+    let result: StateResult;
+    // A state neither build reaches (a group on a package without
+    // groups) is no change, and says so in the log.
+    if (!basePng && !headPng) result = { id: state.id, pixels: 0, absent: true };
+    else if (!basePng) result = { id: state.id, pixels: null, note: "new on head" };
+    else if (!headPng) result = { id: state.id, pixels: null, note: `gone on head (${shots.head.unreachable})` };
+    else {
+      let d = pixelDiff(basePng, headPng);
+      // Rasterising a transformed glyph mid-frame can differ by a pixel
+      // between two identical pages. A difference is shot again once,
+      // both sides, and the smaller one stands: noise does not repeat, a
+      // change does.
+      if (d.pixels !== 0) {
+        const retakeBase = (await capture(browser, urlFor("base", c, state), state, c)).png;
+        const retakeHead = (await capture(browser, urlFor("head", c, state), state, c)).png;
+        if (retakeBase && retakeHead) {
+          const retake = pixelDiff(retakeBase, retakeHead);
+          if (retake.pixels !== -1 && (d.pixels === -1 || retake.pixels < d.pixels)) {
+            d = retake;
+            basePng = retakeBase;
+            headPng = retakeHead;
+          }
+        }
+      }
+      result = { id: state.id, pixels: d.pixels };
+      if (d.pixels !== 0) {
+        writeFileSync(`${stem}.base.png`, basePng);
+        writeFileSync(`${stem}.head.png`, headPng);
+        if (d.image) writeFileSync(`${stem}.diff.png`, d.image);
+      } else if (values.images === "all") {
+        writeFileSync(`${stem}.png`, headPng);
+      }
+    }
+    if (result.note) {
+      if (basePng) writeFileSync(`${stem}.base.png`, basePng);
+      if (headPng) writeFileSync(`${stem}.head.png`, headPng);
+    }
+    return { c, state, result, shots };
+  };
+
   const sites: SiteResult[] = [];
+  const capturing = Date.now();
   try {
+    for (const c of consumers) mkdirSync(join(outDir, c.name), { recursive: true });
+    // Every state of every site, a few pages at a time: each is its own
+    // browser context, so nothing carries between them.
+    const jobs = consumers.flatMap((c) => statesFor(c).map((state) => ({ c, state })));
+    const done = await pool(jobs, Number(values.workers), (job) => compareState(job.c, job.state));
+
     for (const c of consumers) {
       const siteDir = join(outDir, c.name);
-      mkdirSync(siteDir, { recursive: true });
+      const mine = done.filter((d) => d.c === c);
       const markup: Record<Side, string[]> = { base: [], head: [] };
-      const states: StateResult[] = [];
-      for (const state of statesFor(c)) {
-        const shots = {} as Record<Side, Capture>;
-        for (const side of SIDES) {
-          shots[side] = await capture(browser, urlFor(side, c, state), state, c);
-          if (state.markup) {
-            markup[side].push(`<!-- ${state.id} -->`, pretty(shots[side].markup ?? `(${shots[side].unreachable ?? "absent"})`));
-          }
-        }
-        const stem = join(siteDir, slugify(state.id));
-        let basePng = shots.base.png;
-        let headPng = shots.head.png;
-        let result: StateResult;
-        // A state neither build reaches (a group on a package without
-        // groups) is no change, and says so in the log.
-        if (!basePng && !headPng) result = { id: state.id, pixels: 0, absent: true };
-        else if (!basePng) result = { id: state.id, pixels: null, note: "new on head" };
-        else if (!headPng) result = { id: state.id, pixels: null, note: `gone on head (${shots.head.unreachable})` };
-        else {
-          let d = pixelDiff(basePng, headPng);
-          // Rasterising a transformed glyph mid-frame can differ by a
-          // pixel between two identical pages. A difference is shot again
-          // once, both sides, and the smaller one stands: noise does not
-          // repeat, a change does.
-          if (d.pixels !== 0) {
-            const retakeBase = (await capture(browser, urlFor("base", c, state), state, c)).png;
-            const retakeHead = (await capture(browser, urlFor("head", c, state), state, c)).png;
-            if (retakeBase && retakeHead) {
-              const retake = pixelDiff(retakeBase, retakeHead);
-              if (retake.pixels !== -1 && (d.pixels === -1 || retake.pixels < d.pixels)) {
-                d = retake;
-                basePng = retakeBase;
-                headPng = retakeHead;
-              }
-            }
-          }
-          result = { id: state.id, pixels: d.pixels };
-          if (d.pixels !== 0) {
-            writeFileSync(`${stem}.base.png`, basePng);
-            writeFileSync(`${stem}.head.png`, headPng);
-            if (d.image) writeFileSync(`${stem}.diff.png`, d.image);
-          } else if (values.images === "all") {
-            writeFileSync(`${stem}.png`, headPng);
-          }
-        }
-        if (result.note) {
-          if (basePng) writeFileSync(`${stem}.base.png`, basePng);
-          if (headPng) writeFileSync(`${stem}.head.png`, headPng);
-        }
-        states.push(result);
+      for (const { state, result, shots } of mine) {
         const said = result.note ?? (result.absent ? "absent on both" : result.pixels === 0 ? "same" : `${result.pixels} px`);
         console.log(`  ${c.name}: ${state.id}: ${said}`);
+        if (!state.markup) continue;
+        for (const side of SIDES) {
+          markup[side].push(`<!-- ${state.id} -->`, pretty(shots[side].markup ?? `(${shots[side].unreachable ?? "absent"})`));
+        }
       }
       for (const side of SIDES) writeFileSync(join(siteDir, `markup.${side}.html`), markup[side].join("\n"));
       const markupDiff = diffPaths(siteDir, `markup.base.html`, `markup.head.html`, ["-U2"]);
       if (markupDiff) writeFileSync(join(siteDir, "markup.diff"), markupDiff);
-      sites.push({ consumer: c, states, markupDiff, sizes: sizes.get(c.name)!, problems: checkConsumer(c, headExports) });
+      sites.push({
+        consumer: c,
+        states: mine.map((d) => d.result),
+        markupDiff,
+        sizes: sizes.get(c.name)!,
+        problems: checkConsumer(c, headExports),
+      });
     }
   } finally {
     await browser.close();
     server.close();
   }
+  console.log(`consumer-diff: ${seconds(capturing)} to shoot and compare every state`);
 
   // The declarations each side ships, compared as files.
   const dts = join(work, "dts");

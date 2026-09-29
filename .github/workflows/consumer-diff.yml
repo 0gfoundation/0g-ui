@@ -28,27 +28,44 @@ jobs:
         with:
           # The base is built from its own commit, in a worktree.
           fetch-depth: 0
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v4
+      # The checkout is the PR merged into its base, and its first parent
+      # is the base as it stood, so HEAD^1..HEAD is everything the PR
+      # changes. When none of it is the package, the lockfile that builds
+      # it, the list of sites or the diff itself, both sides would build
+      # the same package and every site would match. Markdown never reaches
+      # a build. The render is skipped and the comment says so.
+      - name: Scope
+        id: scope
+        run: |
+          if git diff --quiet HEAD^1 HEAD -- packages/0g-ui pnpm-lock.yaml pnpm-workspace.yaml consumers.json tools/consumer-diff .github/workflows/consumer-diff.yml ':(exclude,glob)**/*.md'; then
+            echo "run=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "run=true" >> "$GITHUB_OUTPUT"
+          fi
+      - if: steps.scope.outputs.run == 'true'
+        uses: pnpm/action-setup@v4
+      - if: steps.scope.outputs.run == 'true'
+        uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: pnpm
-      - run: pnpm install --frozen-lockfile
+      - if: steps.scope.outputs.run == 'true'
+        run: pnpm install --frozen-lockfile
       - name: Chromium
+        if: steps.scope.outputs.run == 'true'
         run: pnpm --filter @0gfoundation/0g-ui-consumer-diff exec playwright install --with-deps chromium
-      # The checkout is the PR merged into its base, and its first parent
-      # is the base as it stood: the diff is what merging would change.
       # Each site's manifest is read from its own repository. A workflow's
       # own token cannot read a sibling repository, so GH_CONSUMERS_TOKEN
       # is a fine-grained token with Contents read on every repository in
       # consumers.json. Without it every site reports "not read".
       - name: Diff
+        if: steps.scope.outputs.run == 'true'
         env:
           HEAD_SHA: ${{ github.event.pull_request.head.sha }}
           GH_TOKEN: ${{ secrets.GH_CONSUMERS_TOKEN }}
         run: pnpm consumer-diff --base HEAD^1 --head-label "${HEAD_SHA:0:7}" --out "$RUNNER_TEMP/consumer-diff"
       - uses: actions/upload-artifact@v4
-        if: always()
+        if: always() && steps.scope.outputs.run == 'true'
         with:
           name: consumer-diff
           path: ${{ runner.temp }}/consumer-diff
@@ -59,11 +76,15 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           REPO: ${{ github.repository }}
           PR: ${{ github.event.pull_request.number }}
+          RUN: ${{ steps.scope.outputs.run }}
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
           MARKER="<!-- 0g-ui-consumer-diff -->"
           REPORT="$RUNNER_TEMP/consumer-diff/report.md"
-          if [ ! -f "$REPORT" ]; then
+          if [ "$RUN" = "false" ]; then
+            printf '%s\n### What this changes for each site\n\nNothing. This PR changes no file a site receives or the diff reads (`packages/0g-ui`, the lockfile, `consumers.json`, `tools/consumer-diff`), so no site was rendered.\n' "$MARKER" > "$RUNNER_TEMP/skipped.md"
+            REPORT="$RUNNER_TEMP/skipped.md"
+          elif [ ! -f "$REPORT" ]; then
             printf '%s\n### What this changes for each site\n\nThe consumer diff did not finish. Its log is in [the run](%s).\n' "$MARKER" "$RUN_URL" > "$RUNNER_TEMP/failed.md"
             REPORT="$RUNNER_TEMP/failed.md"
           fi

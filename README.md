@@ -62,6 +62,12 @@ It never fails a PR. A difference is information: the PR should mean
 every one. Run it locally with `pnpm consumer-diff` (the working tree
 against `origin/main`) or `pnpm consumer-diff --head <ref>`.
 
+A PR that touches none of `packages/0g-ui`, the lockfile,
+`consumers.json` or `tools/consumer-diff`, Markdown aside, cannot change
+what a site receives, so CI skips the render and the comment says so. States are
+shot four at a time, each as soon as the page stops moving, so a full
+run spends most of its time installing and building, not rendering.
+
 It sees what a site passes the shell, not the site's own code meeting
 it: its CSS beside the entry, its types, its build. Building each site
 against a PR is #4, for when there are more sites than one person checks
