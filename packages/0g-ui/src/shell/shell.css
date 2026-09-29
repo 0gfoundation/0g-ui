@@ -124,3 +124,27 @@
     }
   }
 }
+
+/*
+ * A header with collapse="md" (site-header.tsx, collapse.ts) is the
+ * desktop bar from 48rem, so between 48rem and 64rem the phone rules
+ * above must not reach it: sticky rather than in flow, no scroll
+ * translate, and the bar's own glass rather than the fade and scrim.
+ * The driver is not armed in this range for such a header
+ * (ShellScroll's collapse), so nothing writes the properties either.
+ * The tab bar is untouched: a host with collapse="md" renders none.
+ */
+@media (48rem <= width < 64rem) {
+  .shell-header[data-shell-collapse="md"] {
+    position: sticky;
+  }
+  [data-shell-collapse="md"] .shell-header-row {
+    transform: none;
+    background: var(--color-glass);
+    -webkit-backdrop-filter: blur(24px);
+    backdrop-filter: blur(24px);
+  }
+  [data-shell-collapse="md"] .shell-header-row::before {
+    content: none;
+  }
+}

@@ -223,6 +223,8 @@ const VIEWPORTS = {
   phone: { width: 390, height: 844, deviceScaleFactor: 2, mobile: true },
   desktop: { width: 1280, height: 800, deviceScaleFactor: 1, mobile: false },
   wide: { width: 1920, height: 1080, deviceScaleFactor: 1, mobile: false },
+  // an iPad-portrait width: the bar for collapse="md", the phone row for "lg"
+  tablet: { width: 820, height: 1180, deviceScaleFactor: 2, mobile: false },
 } as const;
 
 type Action =
@@ -254,6 +256,7 @@ function statesFor(consumer: Consumer): State[] {
     const t = consumer.themes.length > 1 ? `${theme}, ` : "";
     states.push({ id: `${t}desktop`, viewport: "desktop", theme, action: { kind: "none" }, markup: i === 0 ? "shell" : undefined });
     if (consumer.header.width === "grow") states.push({ id: `${t}wide`, viewport: "wide", theme, action: { kind: "none" } });
+    if (consumer.header.collapse === "md") states.push({ id: `${t}tablet`, viewport: "tablet", theme, action: { kind: "none" } });
     for (const label of groups) {
       states.push({ id: `${t}desktop, ${label} open`, viewport: "desktop", theme, action: { kind: "group", label } });
     }

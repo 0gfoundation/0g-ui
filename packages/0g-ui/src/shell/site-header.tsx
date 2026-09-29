@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 
+import { COLLAPSE_CLASSES, type ShellCollapse } from "./collapse";
 import { cx } from "./cx";
 import type { ShellNavEntry } from "./items";
 import { MobileMenu } from "./mobile-menu";
@@ -44,6 +45,7 @@ export function SiteHeader({
   controls,
   menu,
   width = "fixed",
+  collapse = "lg",
 }: {
   logo: ReactNode;
   title?: ReactNode;
@@ -58,6 +60,10 @@ export function SiteHeader({
    *  content runs full width. A group's panel always spans the bar, so
    *  their edges line up at every width. */
   width?: "fixed" | "grow";
+  /** Where the bar gives way to the phone row and its menu button:
+   *  "lg" (1024px, the default) or "md" (768px) for a nav that fits a
+   *  tablet. Pass the same value to ShellScroll. */
+  collapse?: ShellCollapse;
   menu?: {
     label: string;
     closeLabel: string;
@@ -67,26 +73,32 @@ export function SiteHeader({
     footer?: ReactNode;
   };
 }) {
+  const c = COLLAPSE_CLASSES[collapse];
   return (
-    <header data-shell-header className="shell-header sticky top-0 z-40 lg:px-8 lg:pt-6">
+    <header
+      data-shell-header
+      data-shell-collapse={collapse === "lg" ? undefined : collapse}
+      className={cx("shell-header sticky top-0 z-40", c.header)}
+    >
       <div
         className={cx(
-          "shell-header-row flex h-14 items-center px-4 lg:relative lg:mx-auto",
-          width === "grow" ? "lg:max-w-[max(1000px,calc(70vw_-_8px))]" : "lg:max-w-[1000px]",
-          "lg:rounded-[20px] lg:border lg:border-glass-line lg:bg-glass lg:px-3.5 lg:shadow-glass lg:backdrop-blur-xl",
+          "shell-header-row flex h-14 items-center px-4",
+          c.row,
+          width === "grow" ? c.rowGrow : c.rowFixed,
+          c.bar,
         )}
       >
         {logo}
         {title}
-        <div className="ml-auto flex items-center gap-1.5 lg:gap-4">
-          <div className="hidden lg:block">
-            <TopNav items={items} label={navLabel} />
+        <div className={cx("ml-auto flex items-center gap-1.5", c.gap)}>
+          <div className={cx("hidden", c.showNav)}>
+            <TopNav items={items} label={navLabel} collapse={collapse} />
           </div>
-          {/* From lg the menu button is hidden, so with no controls the
-              slot would only add the gap before it. */}
-          <div className={cx("flex items-center gap-1.5", !controls && "lg:hidden")}>
+          {/* On the bar the menu button is hidden, so with no controls
+              the slot would only add the gap before it. */}
+          <div className={cx("flex items-center gap-1.5", !controls && c.hideOnDesktop)}>
             {controls}
-            {menu && <MobileMenu logo={logo} items={items} {...menu} />}
+            {menu && <MobileMenu logo={logo} items={items} collapse={collapse} {...menu} />}
           </div>
         </div>
       </div>

@@ -67,6 +67,7 @@ export type Manifest = {
     navLabel: string;
     items: readonly NavEntry[];
     width?: "fixed" | "grow";
+    collapse?: "lg" | "md";
     menu?: { label: string; closeLabel: string };
   };
   /** The phone tab bar, over the header's items. */
@@ -106,6 +107,7 @@ export type Consumer = {
     items: NavEntry[];
     controls?: readonly Control[];
     width?: "fixed" | "grow";
+    collapse?: "lg" | "md";
     menu?: { label: string; closeLabel: string };
   };
   tabBar?: { label: string };
@@ -196,6 +198,7 @@ export function resolveManifest(entry: ConsumerEntry, ref: string, manifest: Man
       items,
       controls: fixture.controls,
       width: header.width,
+      collapse: header.collapse,
       menu: header.menu && { label: say(header.menu.label), closeLabel: say(header.menu.closeLabel) },
     },
     tabBar: manifest.tabBar && { label: say(manifest.tabBar.label) },
