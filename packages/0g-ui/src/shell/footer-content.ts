@@ -118,6 +118,10 @@ export const FOOTER_LABELS = {
   email: "Email",
   subscribe: "Sign up",
   subscribed: "Thanks, you're signed up.",
+  // the refusals, by the route's status (newsletter-form.tsx)
+  subscribeInvalid: "Please enter a valid email address.",
+  subscribeLimited: "Too many attempts. Try again later.",
+  subscribeClosed: "Newsletter signups aren't open yet. Please check back soon.",
   subscribeFailed: "Something went wrong.",
   socials: "Socials",
   tagline: "The AI trust layer",
@@ -165,7 +169,9 @@ export function applyFooterChanges(content: FooterContent, changes: FooterChange
 }
 
 /** What a site's changes name that does not exist, and ids that would
- *  collide: a typo in `remove` would otherwise silently keep a link. */
+ *  collide: a typo in `remove` would otherwise silently keep a link, and
+ *  an added link named like a label (`terms`) would take that label's
+ *  translation. */
 export function checkFooterChanges(content: FooterContent, changes: FooterChanges = {}): string[] {
   const problems: string[] = [];
   const columnIds = new Set(content.columns.map((c) => c.id));
@@ -184,9 +190,10 @@ export function checkFooterChanges(content: FooterContent, changes: FooterChange
     ...Object.values(changes.add ?? {}).flat(),
     ...(changes.columns ?? []).flatMap((c) => [c, ...c.links]),
   ];
+  const taken = new Set<string>([...known, ...Object.keys(FOOTER_LABELS)]);
   for (const item of added) {
-    if (known.has(item.id)) problems.push(`footer: ${item.id} is already a shared id`);
-    known.add(item.id);
+    if (taken.has(item.id)) problems.push(`footer: ${item.id} is already a shared id`);
+    taken.add(item.id);
   }
   return problems;
 }

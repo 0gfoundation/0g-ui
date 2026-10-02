@@ -38,7 +38,7 @@ type Look = { variant?: ButtonVariant; size?: ButtonSize; round?: boolean; fullW
 // button rendered outside the header and footer, for a host without
 // Tailwind's preflight.
 const BASE =
-  "shell-button inline-flex shrink-0 cursor-pointer items-center justify-center rounded-full border font-semibold leading-[1.4] tracking-normal whitespace-nowrap [text-box:trim-both_cap_alphabetic] transition-colors duration-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500 disabled:cursor-not-allowed disabled:opacity-50";
+  "shell-button inline-flex shrink-0 cursor-pointer items-center justify-center rounded-full border font-bold leading-[1.4] tracking-normal whitespace-nowrap [text-box:trim-both_cap_alphabetic] transition-colors duration-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500 disabled:cursor-not-allowed disabled:opacity-50";
 
 const VARIANTS: Record<ButtonVariant, string> = {
   primary: "border-ink bg-ink text-on-ink hover:bg-ink/80",

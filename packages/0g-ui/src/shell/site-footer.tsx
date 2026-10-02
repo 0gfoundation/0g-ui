@@ -31,12 +31,13 @@ import { SocialGlyph } from "./social-glyphs";
  *   newsletter, the lockup, and the legal row stacked.
  *
  * One DOM for the three, ordered by grid placement, so the form renders
- * once. The surface is token override: `ink` (headings, the newsletter's
- * heading), `ink-muted` (links, the legal row), `ink-soft` (the tagline,
- * the social glyphs), `hairline` (the rule, the social boxes),
- * `hairline-strong` and `control` (the email field). A site redefines
- * them on `.shell-footer` (0g.ai: white on its landscape) and passes the
- * art as `background`.
+ * once. The lockup comes last in it, as it does on screen at every
+ * width, so focus follows the page; only the phone's newsletter (after
+ * the socials on screen) and the tablet's socials (beside the newsletter)
+ * are out of step. The surface is token override, a token per element
+ * (`footer-*` and `field-*`, tailwind.css): a site redefines them on
+ * `.shell-footer` (0g.ai: white on its landscape) and passes the art as
+ * `background`.
  *
  * A server component: the links and the form are the client pieces.
  */
@@ -74,9 +75,9 @@ export function SiteFooter({
   const year = new Date().getFullYear();
 
   const heading =
-    "text-[10px] leading-[1.6] font-medium tracking-normal text-ink uppercase [text-box:trim-both_cap_alphabetic]";
+    "text-[10px] leading-[1.6] font-medium tracking-normal text-footer-heading uppercase [text-box:trim-both_cap_alphabetic]";
   const link =
-    "block w-fit text-[14px] leading-[1.4] font-light tracking-normal whitespace-nowrap text-ink-muted transition-colors duration-200 [text-box:trim-both_cap_alphabetic] hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500 md:text-[16px]";
+    "block w-fit text-[14px] leading-[1.4] font-light tracking-normal whitespace-nowrap text-footer-text transition-colors duration-200 [text-box:trim-both_cap_alphabetic] hover:text-footer-title focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500 md:text-[16px]";
 
   return (
     <footer className="shell-footer relative isolate overflow-hidden">
@@ -94,7 +95,7 @@ export function SiteFooter({
         >
           {newsletter && (
             <div className="order-2 col-span-2 flex flex-col gap-4 md:order-1 lg:order-none lg:col-span-1 lg:col-start-1 lg:row-start-1">
-              <p className="text-[20px] leading-[1.3] font-medium tracking-normal text-ink [text-box:trim-both_cap_alphabetic] md:max-w-[180px]">
+              <p className="text-[20px] leading-[1.3] font-medium tracking-normal text-footer-title [text-box:trim-both_cap_alphabetic] md:max-w-[180px]">
                 {say("newsletter")}
               </p>
               <NewsletterForm
@@ -104,18 +105,14 @@ export function SiteFooter({
                   email: say("email"),
                   submit: say("subscribe"),
                   done: say("subscribed"),
+                  invalid: say("subscribeInvalid"),
+                  limited: say("subscribeLimited"),
+                  closed: say("subscribeClosed"),
                   failed: say("subscribeFailed"),
                 }}
               />
             </div>
           )}
-
-          <div className="order-3 col-span-2 flex flex-col gap-2 pt-9 md:order-4 md:col-span-4 md:pt-0 lg:order-none lg:col-span-1 lg:col-start-1 lg:row-start-2 lg:self-end">
-            {logo}
-            <p className="text-[12px] leading-[1.5] font-light tracking-normal text-ink-soft [text-box:trim-both_cap_alphabetic]">
-              {say("tagline")}
-            </p>
-          </div>
 
           <nav aria-label={say("nav")} className="contents">
             {columns.map((column) => (
@@ -145,7 +142,7 @@ export function SiteFooter({
                   <li key={socialId(social)}>
                     <FooterLink
                       href={social.href}
-                      className="relative block size-[40px] rounded-[8px] border border-hairline text-ink-soft backdrop-blur-[25px] transition-opacity duration-200 hover:opacity-70 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500"
+                      className="relative block size-[40px] rounded-[8px] border border-footer-social-line text-footer-glyph backdrop-blur-[25px] transition-opacity duration-200 hover:opacity-70 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500"
                       ariaLabel={NETWORK_NAMES[social.network]}
                     >
                       <SocialGlyph network={social.network} />
@@ -155,22 +152,29 @@ export function SiteFooter({
               </ul>
             </div>
           )}
+
+          <div className="order-3 col-span-2 flex flex-col gap-2 pt-9 md:order-4 md:col-span-4 md:pt-0 lg:order-none lg:col-span-1 lg:col-start-1 lg:row-start-2 lg:self-end">
+            {logo}
+            <p className="text-[12px] leading-[1.5] font-light tracking-normal text-footer-tagline [text-box:trim-both_cap_alphabetic]">
+              {say("tagline")}
+            </p>
+          </div>
         </div>
 
         {after}
 
-        <div className="flex flex-col gap-4 border-t border-hairline pt-4 text-[10px] leading-[1.6] font-medium tracking-normal text-ink-muted md:flex-row md:items-start md:justify-between">
+        <div className="flex flex-col gap-4 border-t border-footer-rule pt-4 text-[10px] leading-[1.6] font-medium tracking-normal text-footer-text md:flex-row md:items-start md:justify-between">
           <p className="[text-box:trim-both_cap_alphabetic]">
             © {year} {FOOTER_LEGAL.entity} {say("operator")} {say("rights")}
           </p>
           <ul className="flex shrink-0 items-center gap-4">
             <li>
-              <FooterLink href={FOOTER_LEGAL.terms} origin={origin} className="block [text-box:trim-both_cap_alphabetic] hover:text-ink">
+              <FooterLink href={FOOTER_LEGAL.terms} origin={origin} className="block [text-box:trim-both_cap_alphabetic] hover:text-footer-title">
                 {say("terms")}
               </FooterLink>
             </li>
             <li>
-              <FooterLink href={FOOTER_LEGAL.privacy} origin={origin} className="block [text-box:trim-both_cap_alphabetic] hover:text-ink">
+              <FooterLink href={FOOTER_LEGAL.privacy} origin={origin} className="block [text-box:trim-both_cap_alphabetic] hover:text-footer-title">
                 {say("privacy")}
               </FooterLink>
             </li>

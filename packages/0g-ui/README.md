@@ -217,12 +217,30 @@ import { manifest } from "./0g-ui.manifest";
 - Shared links are absolute, since the hub links to 0g.ai's pages; one on
   `origin` renders as an in-app path through the provider's `Link`, the
   rest open in a new tab.
-- The surface is token override, on `.shell-footer`: `ink` for headings,
-  `ink-muted` for links and the legal row, `ink-soft` for the tagline and
-  the social glyphs, `hairline` for the rule and the social boxes,
-  `hairline-strong` and `control`/`on-control` for the email field.
-  0g.ai sets them white over its landscape. A different arrangement is a
-  named option in a release, never a `className`.
+- The surface is token override, a token per element the designs colour
+  on their own: `footer-title` (the newsletter heading and its replies),
+  `footer-heading`, `footer-text` (links and the legal row),
+  `footer-tagline`, `footer-rule`, `footer-social-line`, `footer-glyph`,
+  and for the email field `field`, `field-line`, `field-placeholder`,
+  `field-submit`, `field-submit-ink`, `field-submit-line`. In light they
+  are the neutrals, in dark the hub's dark footer. A site redefines them
+  on `.shell-footer`, never `ink` and its kin, which the slots read too.
+  0g.ai sets them white over its landscape:
+
+  ```css
+  .shell-footer {
+    --color-footer-title: #ffffff;
+    --color-footer-heading: #ffffff;
+    --color-footer-text: #ffffff;
+    --color-footer-tagline: #ffffff;
+    --color-footer-rule: #ffffff;
+    --color-footer-social-line: #dcdfe4;
+    --color-footer-glyph: #ffffff;
+  }
+  ```
+
+  A different arrangement is a named option in a release, never a
+  `className`.
 
 A server component: its links and the form are the client pieces.
 
@@ -278,7 +296,12 @@ keyed on `[data-theme="dark"]`: `--color-brand-900`, `--color-brand-500`,
 `--color-control-hover`, `--color-on-control`, `--color-glass`,
 `--color-glass-line`, `--shadow-glass`, the neutrals the footer and
 buttons read, `--color-ink-soft`, `--color-ink-muted`, `--color-hairline`,
-`--color-hairline-strong`, `--color-on-ink`, and for the groups and the
+`--color-hairline-strong`, `--color-on-ink`, the footer's surface,
+`--color-footer-title`, `--color-footer-heading`, `--color-footer-text`,
+`--color-footer-tagline`, `--color-footer-rule`,
+`--color-footer-social-line`, `--color-footer-glyph`, `--color-field`,
+`--color-field-line`, `--color-field-placeholder`, `--color-field-submit`,
+`--color-field-submit-ink`, `--color-field-submit-line`, and for the groups and the
 phone menu only `--color-nav-title`, `--color-nav-title-hover`,
 `--color-nav-muted`, `--color-nav-heading`, `--color-nav-line`,
 `--color-nav-chevron`, `--color-nav-link-hover`, `--shadow-nav-panel`.

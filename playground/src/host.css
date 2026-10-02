@@ -16,10 +16,18 @@
 /* `?footer=art` (app.tsx): the footer's surface redefined on it, as 0g.ai
    does over its landscape, and a gradient standing in for the art. */
 .pg-footer-art .shell-footer {
-  --color-ink: #ffffff;
-  --color-ink-muted: #ffffff;
-  --color-ink-soft: #ffffff;
-  --color-hairline: #dcdfe4;
+  --color-footer-title: #ffffff;
+  --color-footer-heading: #ffffff;
+  --color-footer-text: #ffffff;
+  --color-footer-tagline: #ffffff;
+  --color-footer-rule: #ffffff;
+  --color-footer-social-line: #dcdfe4;
+  --color-footer-glyph: #ffffff;
+}
+/* The lockup is the site's, so the site colours it (0g.ai passes its
+   white one). */
+.pg-footer-art .shell-footer .pg-logo {
+  color: #ffffff;
 }
 .pg-footer-landscape {
   position: absolute;

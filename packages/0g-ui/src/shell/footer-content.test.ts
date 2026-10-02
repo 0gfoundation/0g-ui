@@ -82,6 +82,12 @@ describe("checkFooterChanges", () => {
       "footer: docs is already a shared id",
     ]);
   });
+
+  it("reports an added id that is a label's, which would take that label's translation", () => {
+    expect(checkFooterChanges(FOOTER_CONTENT, { add: { ecosystem: [{ id: "terms", label: "Terms", href: "https://z" }] } })).toEqual([
+      "footer: terms is already a shared id",
+    ]);
+  });
 });
 
 describe("localPath", () => {

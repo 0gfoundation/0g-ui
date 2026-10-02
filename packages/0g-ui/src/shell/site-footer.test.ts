@@ -3,6 +3,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 
 import { buttonClasses } from "./button";
+import { refusal } from "./newsletter-form";
 import { SiteFooter } from "./site-footer";
 
 const render = (props: Partial<Parameters<typeof SiteFooter>[0]> = {}) =>
@@ -56,11 +57,38 @@ describe("SiteFooter", () => {
     expect(render({ changes: { remove: ["enterprise"] } })).toContain("--footer-columns:3");
   });
 
+  it("puts the lockup after the links and socials, where it is on screen, so focus follows", () => {
+    const html = render({ newsletter: { endpoint: "/api/newsletter" }, logo: createElement("span", null, "LOCKUP") });
+    expect(html.indexOf("Sign up for our newsletter")).toBeLessThan(html.indexOf("Products"));
+    expect(html.indexOf("LOCKUP")).toBeGreaterThan(html.indexOf('aria-label="Telegram"'));
+    expect(html.indexOf("LOCKUP")).toBeLessThan(html.indexOf("All rights reserved"));
+  });
+
+  it("colours each element from its own footer token, never ink, which the slots read too", () => {
+    const html = render({ newsletter: { endpoint: "/api/newsletter" } });
+    for (const token of ["footer-title", "footer-heading", "footer-text", "footer-tagline", "footer-rule", "footer-social-line", "footer-glyph", "field-line", "field-submit"]) {
+      expect(html).toContain(token);
+    }
+    expect(html).not.toMatch(/[ "](text|border|bg)-ink[ "]/);
+  });
+
   it("puts the slots where they are documented", () => {
     const html = render({ before: createElement("i", null, "BEFORE"), after: createElement("i", null, "AFTER") });
     expect(html.indexOf("BEFORE")).toBeLessThan(html.indexOf("Products"));
     expect(html.indexOf("AFTER")).toBeGreaterThan(html.indexOf("Press"));
     expect(html.indexOf("AFTER")).toBeLessThan(html.indexOf("All rights reserved"));
+  });
+});
+
+describe("refusal", () => {
+  const labels = { email: "", submit: "", done: "", invalid: "INVALID", limited: "LIMITED", closed: "CLOSED", failed: "FAILED" };
+
+  it("answers in the site's words by the route's status, not the server's English", () => {
+    expect(refusal(400, labels)).toBe("INVALID");
+    expect(refusal(429, labels)).toBe("LIMITED");
+    expect(refusal(503, labels)).toBe("CLOSED");
+    expect(refusal(502, labels)).toBe("FAILED");
+    expect(refusal(0, labels)).toBe("FAILED");
   });
 });
 
