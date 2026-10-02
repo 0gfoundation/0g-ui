@@ -19,6 +19,7 @@ const ShellProvider = component(pkg, "ShellProvider");
 const SiteHeader = component(pkg, "SiteHeader");
 const TabBar = component(pkg, "TabBar");
 const ShellScroll = component(pkg, "ShellScroll");
+const SiteFooter = component(pkg, "SiteFooter");
 const ThemeButton = component(pkgTheme, "ThemeButton");
 
 /** The registry's nav entries as the shell's, with icon names resolved. */
@@ -69,10 +70,25 @@ function ControlView({ control }: { control: Control }): ReactNode {
   );
 }
 
+/** The site's footer from the package, with its manifest's props, on a
+ *  stand-in for its art. Nothing on a build without SiteFooter. */
+function FooterView({ consumer }: { consumer: Consumer }): ReactNode {
+  const footer = consumer.footer;
+  if (!footer || !SiteFooter) return null;
+  return createElement(SiteFooter, {
+    logo: <LogoStub {...consumer.header.logo} />,
+    changes: footer.changes,
+    labels: footer.labels,
+    origin: footer.origin,
+    newsletter: footer.newsletter ? { endpoint: "/api/newsletter" } : undefined,
+    background: footer.background ? <div style={{ position: "absolute", inset: 0, background: footer.background }} /> : undefined,
+  });
+}
+
 /**
  * One site's page: its header and tab bar from the package, with the
  * registry's props, over content that gives the glass something to sit
- * on (a light block, then cards). The pathname is fixed so the active
+ * on (a light block, then cards), and its footer. The pathname is fixed so the active
  * entry never depends on the URL the harness serves from.
  */
 export function Fixture({ consumer }: { consumer: Consumer }) {
@@ -114,6 +130,7 @@ export function Fixture({ consumer }: { consumer: Consumer }) {
           ))}
         </main>
       </div>
+      <FooterView consumer={consumer} />
       {tabBar && TabBar ? createElement(TabBar, { items, label: tabBar.label }) : null}
       {ShellScroll ? createElement(ShellScroll, header.collapse ? { collapse: header.collapse } : {}) : null}
     </>

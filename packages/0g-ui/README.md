@@ -4,7 +4,8 @@ The shared 0G site shell (ADR-0012 in `0gfoundation/0g-hub`). Four
 entries:
 
 - `@0gfoundation/0g-ui/shell` — `SiteHeader`, `TabBar`, `TopNav`,
-  `ShellScroll`, `ShellProvider`, the five nav icons, `SHELL_BOOTSTRAP`
+  `ShellScroll`, `ShellProvider`, the five nav icons, `SHELL_BOOTSTRAP`,
+  `SiteFooter` with its shared content, `Button` and `ButtonLink`
 - `@0gfoundation/0g-ui/tailwind.css` — the styles for a host on
   Tailwind 4: imported after `@import "tailwindcss"`, the host generates
   the shell's utilities with its own
@@ -21,7 +22,7 @@ host's.
 As a git dependency pinned to a release tag, with pnpm:
 
 ```json
-"@0gfoundation/0g-ui": "git+https://github.com/0gfoundation/0g-ui.git#0g-ui-v0.4.0&path:packages/0g-ui"
+"@0gfoundation/0g-ui": "git+https://github.com/0gfoundation/0g-ui.git#0g-ui-v0.5.0&path:packages/0g-ui"
 ```
 
 pnpm is required. `&path:packages/0g-ui` is a pnpm extension, and npm
@@ -175,6 +176,68 @@ const items: ShellNavEntry[] = [
 Without groups, `menu`, `width` or `collapse` the header renders exactly
 as in 0.1.0.
 
+### The footer
+
+`SiteFooter` is one layout at three widths, the same on every 0G site:
+the design's 300px row from lg, a four-column grid on tablets, the
+columns in pairs on phones (a column with `phone: false`, Enterprise, is
+left out there). The columns, socials and legal row are shared content in
+the package (`FOOTER_CONTENT`, `footer-content.ts`); a site states only
+how its footer differs:
+
+```tsx
+import { SiteFooter } from "@0gfoundation/0g-ui/shell";
+import { manifest } from "./0g-ui.manifest";
+
+<SiteFooter
+  logo={<Logo />}                                   // the site's lockup
+  changes={manifest.footer.changes}                 // { remove, add, columns, socials }
+  newsletter={{ endpoint: "https://0g.ai/api/newsletter" }}
+  origin="https://0g.ai"                            // its own links render in-app
+  labels={labels}                                   // its strings by id, if translated
+  background={<Landscape />}                        // art behind it, if any
+  before={<BackToTop />}                            // slots: above the links,
+  after={undefined}                                 // and above the legal row
+/>;
+```
+
+- Every column, link and label has a stable `id` beside its English
+  text. `changes.remove` goes by id (a social's is `socials.<network>`),
+  `changes.add` appends links to a shared column by its id,
+  `changes.columns` and `changes.socials` append the site's own.
+  `checkFooterChanges` reports an id that does not exist, and the
+  consumer diff runs it on every site.
+- `labels` maps ids to the site's strings (the hub's translations), the
+  ids of `FOOTER_LABELS` and of any column or link; English where absent.
+  The entity, "Zero Gravity Labs Inc.", is not translated.
+- The newsletter posts `{ email }` as JSON to `endpoint` and reads
+  `{ ok, error }`, the contract of 0g.ai's `/api/newsletter`, the one
+  list. It says "signed up" only for a signup the server accepted.
+  Without `newsletter` the footer has none.
+- Shared links are absolute, since the hub links to 0g.ai's pages; one on
+  `origin` renders as an in-app path through the provider's `Link`, the
+  rest open in a new tab.
+- The surface is token override, on `.shell-footer`: `ink` for headings,
+  `ink-muted` for links and the legal row, `ink-soft` for the tagline and
+  the social glyphs, `hairline` for the rule and the social boxes,
+  `hairline-strong` and `control`/`on-control` for the email field.
+  0g.ai sets them white over its landscape. A different arrangement is a
+  named option in a release, never a `className`.
+
+A server component: its links and the form are the client pieces.
+
+### Buttons
+
+`Button` (a `<button>`, `type="button"` by default) and `ButtonLink` (an
+in-app path through the provider's `Link`, or `external`) draw the
+design's pills: `variant` `"primary"` (black) or `"secondary"` (white
+with a hairline), `size` `"default"` (48px), `"small"` (32px) or `"adaptive"` (32px below md, 48px from md, as 0g.ai draws its pills), `round`
+for an icon-only circle of the same height (give it an `aria-label`),
+`fullWidth` to fill a container. The height is fixed and the content
+centred, so a button never resizes when its label becomes a spinner.
+`buttonClasses(look)` returns the classes for an element of the host's
+own. No `className`: a new look is a named option here.
+
 ### CSS: one entry or the other, never both
 
 A host on Tailwind 4 imports the source entry after its own Tailwind
@@ -205,17 +268,24 @@ the utilities the components use in `@layer utilities` with Tailwind's
 default theme inlined, the behaviour rules unlayered. No preflight in
 either entry: the element defaults the shell's own markup needs (list,
 link, button, box sizing) sit in `@layer base`, scoped under
-`.shell-header`, `.shell-nav` and `.shell-menu`, a no-op beside preflight. The shell
+`.shell-header`, `.shell-nav`, `.shell-menu`, `.shell-footer` and
+`.shell-button`, a no-op beside preflight. The shell
 inherits the body's font.
 
 The tokens it reads, with the 0G values as defaults and the dark values
 keyed on `[data-theme="dark"]`: `--color-brand-900`, `--color-brand-500`,
 `--color-bg`, `--color-ink`, `--color-line`, `--color-control`,
 `--color-control-hover`, `--color-on-control`, `--color-glass`,
-`--color-glass-line`, `--shadow-glass`, and for the groups and the phone
-menu only `--color-nav-title`, `--color-nav-title-hover`,
+`--color-glass-line`, `--shadow-glass`, the neutrals the footer and
+buttons read, `--color-ink-soft`, `--color-ink-muted`, `--color-hairline`,
+`--color-hairline-strong`, `--color-on-ink`, and for the groups and the
+phone menu only `--color-nav-title`, `--color-nav-title-hover`,
 `--color-nav-muted`, `--color-nav-heading`, `--color-nav-line`,
-`--color-nav-chevron`, `--color-nav-link-hover`, `--shadow-nav-panel`. A site with its own colours
+`--color-nav-chevron`, `--color-nav-link-hover`, `--shadow-nav-panel`.
+Four of those are aliases: `nav-muted`, `nav-heading`, `nav-line` and
+`nav-chevron` are `ink-muted`, `ink-soft`, `hairline` and
+`hairline-strong` under the panels' names, so a site that redefines a
+neutral moves both, and one that redefined a `nav-*` value still wins. A site with its own colours
 redefines them in its own `@theme` or on `:root`; the package's are
 `@theme default`, so the site's win whatever the import order. Colours
 are never props.

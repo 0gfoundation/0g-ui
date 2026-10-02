@@ -73,3 +73,35 @@ describe("a manifest", () => {
     ]);
   });
 });
+
+describe("a manifest's footer", () => {
+  const withFooter = (footer: string) =>
+    evaluateManifest(HUB_LIKE.replace(`tabBar: { label: "primary" },`, `tabBar: { label: "primary" },\n  footer: ${footer},`), "hub") as Manifest;
+  const messages = { ...MESSAGES, footer: { operator: "Operator and publisher of the 0G Hub.", builderHub: "Builder Hub" } };
+
+  it("resolves its changes, newsletter and labels for the fixture", () => {
+    const manifest = withFooter(`{ changes: { remove: ["faucet"] }, newsletter: true, labels: { namespace: "footer" } }`);
+    expect(checkManifest(manifest)).toEqual([]);
+    const consumer = resolveManifest(entry, "main", manifest, messages);
+    expect(consumer.footer).toMatchObject({ changes: { remove: ["faucet"] }, newsletter: true, labels: { builderHub: "Builder Hub" } });
+    expect(checkConsumer(consumer, exports)).toEqual([]);
+  });
+
+  it("reports an id the shared content lacks, and a build with no footer", () => {
+    const consumer = resolveManifest(entry, "main", withFooter(`{ changes: { remove: ["faucett"] } }`), MESSAGES);
+    expect(checkConsumer(consumer, exports)).toEqual(["footer.remove: faucett is not a shared column, link or social"]);
+    const { SiteFooter: _footer, ...older } = exports;
+    expect(checkConsumer(consumer, older)).toEqual(["the site has a footer, and this build exports no SiteFooter"]);
+  });
+
+  it("checks the footer's shape", () => {
+    expect(checkManifest(withFooter(`{ changes: { remove: "faucet" } }`))).toEqual(["footer.changes.remove must list ids"]);
+    expect(checkManifest(withFooter(`{ labels: "footer" }`))).toEqual(["footer.labels needs a namespace"]);
+  });
+
+  it("names a labels namespace the messages lack", () => {
+    expect(() => resolveManifest(entry, "main", withFooter(`{ labels: { namespace: "footer" } }`), MESSAGES)).toThrow(
+      "footer labels: footer is not a namespace",
+    );
+  });
+});

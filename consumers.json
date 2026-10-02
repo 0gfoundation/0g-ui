@@ -10,7 +10,7 @@
     {
       "name": "0g-site",
       "repo": "0gfoundation/0g-site",
-      "ref": "navbar-change",
+      "ref": "main",
       "manifest": "src/components/0g-ui.manifest.ts",
       "url": "https://0g.ai"
     }

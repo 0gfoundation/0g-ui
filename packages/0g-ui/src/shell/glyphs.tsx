@@ -53,3 +53,13 @@ export function MenuIcon() {
 export function CloseIcon({ size = 22 }: { size?: number }) {
   return <Glyph size={size} d="M6 6l12 12M18 6 6 18" />;
 }
+
+/** "Go": the newsletter's submit. The design's own 16-unit arrow with its
+ *  2px stroke, heavier than a Glyph at this size. */
+export function ArrowRightIcon() {
+  return (
+    <svg viewBox="0 0 16 16" width={16} height={16} fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" aria-hidden>
+      <path d="M8.5 14.5 14.5 8 8.5 1.5M13.5 8h-12" />
+    </svg>
+  );
+}

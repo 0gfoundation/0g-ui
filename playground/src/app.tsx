@@ -1,9 +1,11 @@
 import {
   ActivityIcon,
+  ButtonLink,
   DiscoverIcon,
   ExplorerIcon,
   PortfolioIcon,
   ShellScroll,
+  SiteFooter,
   SiteHeader,
   SwapIcon,
   TabBar,
@@ -28,6 +30,10 @@ const ITEMS: readonly ShellItem[] = [
   { href: "/portfolio", label: "Portfolio", icon: PortfolioIcon },
   { href: "https://chainscan.0g.ai", label: "Explorer", icon: ExplorerIcon, external: true },
 ];
+
+/** `?footer=art`: the footer on art behind white type, the way 0g.ai
+ *  draws it on its landscape (host.css redefines the tokens on it). */
+const footerArt = new URLSearchParams(window.location.search).get("footer") === "art";
 
 /**
  * The shell over enough content to scroll, laid out as the hub lays it
@@ -74,6 +80,20 @@ export function App() {
             </article>
           ))}
         </main>
+      </div>
+      <div className={footerArt ? "pg-footer-art" : undefined}>
+        <SiteFooter
+          logo={<Logo />}
+          newsletter={{ endpoint: "/api/newsletter" }}
+          background={footerArt ? <div className="pg-footer-landscape" /> : undefined}
+          before={
+            footerArt ? undefined : (
+              <ButtonLink href="#top" variant="secondary">
+                Back to the top
+              </ButtonLink>
+            )
+          }
+        />
       </div>
       <TabBar items={ITEMS} label="Main" />
       <ShellScroll />

@@ -15,6 +15,8 @@
  * controls, the site CSS that reaches the shell, the page to stand on.
  */
 
+import type { FooterChanges } from "../../../packages/0g-ui/src/shell/footer-content";
+
 export type LinkEntry = {
   href: string;
   label: string;
@@ -72,6 +74,18 @@ export type Manifest = {
   };
   /** The phone tab bar, over the header's items. */
   tabBar?: { label: string };
+  /** The footer, for a site that renders SiteFooter: what it passes it. */
+  footer?: {
+    /** How the site's footer differs from the shared content (0g-ui#9). */
+    changes?: FooterChanges;
+    /** Whether it has the newsletter signup. */
+    newsletter?: boolean;
+    /** The site's own origin, whose shared links render as in-app paths. */
+    origin?: string;
+    /** The namespace in `messages` holding the footer's strings by id;
+     *  without it the footer is the shared English. */
+    labels?: { namespace: string };
+  };
   fixture: {
     /** The page the fixture stands on, for the active nav entry. */
     path: string;
@@ -86,6 +100,9 @@ export type Manifest = {
      *  body's type, the dark variant. Compiled by the same Tailwind run
      *  as the shell's entry. */
     hostCss?: readonly string[];
+    /** A CSS background standing in for the footer's art (0g.ai's
+     *  landscape), so its surface tokens are seen on something like it. */
+    footerBackground?: string;
   };
 };
 
@@ -111,6 +128,13 @@ export type Consumer = {
     menu?: { label: string; closeLabel: string };
   };
   tabBar?: { label: string };
+  footer?: {
+    changes?: FooterChanges;
+    newsletter: boolean;
+    origin?: string;
+    labels?: Record<string, string>;
+    background?: string;
+  };
 };
 
 export function isGroupEntry(entry: NavEntry): entry is GroupEntry {
@@ -149,6 +173,20 @@ export function checkManifest(value: unknown): string[] {
   }
   if (!isObject(m.fixture) || typeof m.fixture.path !== "string" || !isObject(m.fixture.logo)) {
     problems.push("fixture needs path and logo");
+  }
+  if (m.footer !== undefined) {
+    const f = m.footer as unknown;
+    if (!isObject(f)) problems.push("footer must be an object");
+    else {
+      const changes = f.changes;
+      if (changes !== undefined && !isObject(changes)) problems.push("footer.changes must be an object");
+      else if (isObject(changes) && changes.remove !== undefined && !(Array.isArray(changes.remove) && changes.remove.every((id) => typeof id === "string"))) {
+        problems.push("footer.changes.remove must list ids");
+      }
+      if (f.labels !== undefined && !(isObject(f.labels) && typeof f.labels.namespace === "string")) {
+        problems.push("footer.labels needs a namespace");
+      }
+    }
   }
   return problems;
 }
@@ -202,7 +240,23 @@ export function resolveManifest(entry: ConsumerEntry, ref: string, manifest: Man
       menu: header.menu && { label: say(header.menu.label), closeLabel: say(header.menu.closeLabel) },
     },
     tabBar: manifest.tabBar && { label: say(manifest.tabBar.label) },
+    footer: manifest.footer && {
+      changes: manifest.footer.changes,
+      newsletter: manifest.footer.newsletter ?? false,
+      origin: manifest.footer.origin,
+      labels: manifest.footer.labels && footerLabels(messages, manifest.footer.labels.namespace),
+      background: fixture.footerBackground,
+    },
   };
+}
+
+/** The footer's strings from the site's messages: every string in the
+ *  namespace, by id. SiteFooter takes the ones it knows and keeps English
+ *  for the rest, so a missing one is not an error. */
+function footerLabels(messages: unknown, namespace: string): Record<string, string> {
+  const table = isObject(messages) ? messages[namespace] : undefined;
+  if (!isObject(table)) throw new Error(`footer labels: ${namespace} is not a namespace in the site's messages`);
+  return Object.fromEntries(Object.entries(table).filter((e): e is [string, string] => typeof e[1] === "string"));
 }
 
 /** What a build of the package cannot give a site: an icon it names that
@@ -213,6 +267,14 @@ export function checkConsumer(c: Consumer, exports: Record<string, unknown>): st
   for (const link of links) {
     if (link.icon && typeof exports[link.icon] !== "function") {
       problems.push(`icon ${link.icon} is not an export of @0gfoundation/0g-ui/shell`);
+    }
+  }
+  if (c.footer) {
+    const check = exports.checkFooterChanges;
+    if (typeof exports.SiteFooter !== "function" || typeof check !== "function") {
+      problems.push("the site has a footer, and this build exports no SiteFooter");
+    } else {
+      problems.push(...(check as (content: unknown, changes: unknown) => string[])(exports.FOOTER_CONTENT, c.footer.changes));
     }
   }
   if (c.tabBar) {

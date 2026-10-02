@@ -8,10 +8,13 @@ there, work in hub issue #457). The sites that install it are listed in
 ## Boundary
 
 The package ships the header's layout, the desktop text nav, the phone
-tab bar with its icons, the scroll behaviour, the `.shell-*` CSS with the
-tokens it reads, and the theme mechanism as its own entry. A consumer
-passes its lockup, its nav items and its controls as props and its labels
-as strings, and reads `Link` and `pathname` from `ShellProvider`. Nothing
+tab bar with its icons, the scroll behaviour, the footer with the content
+every site's footer shares, the pill buttons, the `.shell-*` CSS with the
+tokens it reads, and the theme mechanism as its own entry (0g-ui#9 added
+the footer and buttons, once the hub became the footer's second site). A
+consumer passes its lockup, its nav items and its controls as props and
+its labels as strings, states how its footer differs from the shared one,
+and reads `Link` and `pathname` from `ShellProvider`. Nothing
 in the package knows about wallets, chains, prices, analytics or fonts.
 
 Three rules keep it portable (ADR-0012 §2):
@@ -47,7 +50,10 @@ Three rules keep it portable (ADR-0012 §2):
   `bootstrap.ts` (the Safari stamp), `shell.css` (the behaviour),
   `nav-dropdown.tsx` (a group's desktop panel), `mobile-menu.tsx` (the
   phone menu for a site with no tab bar), `glyphs.tsx` (their stroke
-  marks), and
+  marks), `site-footer.tsx` (the footer's three layouts),
+  `footer-content.ts` (its shared content and how a site's changes apply),
+  `footer-link.tsx`, `newsletter-form.tsx` and `social-glyphs.tsx` (its
+  pieces), `button.tsx` (the pills), and
   `theme/` (the `./theme` entry: bootstrap string, hook, `ThemeButton`)
 - `packages/0g-ui/src/tailwind.css` — the Tailwind source entry: the
   tokens, the `dark` variant, the shadow routing, the base-layer
@@ -88,8 +94,12 @@ Three rules keep it portable (ADR-0012 §2):
   `shell.source.css` and nothing else.
 - A visual change is a package release plus a tag bump in each site.
 - A site's shell config lives in its manifest, in the site's repository,
-  and its header reads from it. Never copy a site's nav, labels or CSS
-  into this repository. A site that adopts the package adds a manifest
+  and its header and footer read from it. Content every site shares may
+  live here, as data with a stable id on each entry: the footer's columns,
+  socials and legal row (`footer-content.ts`). One site's content may
+  not: never copy a site's nav, its own links or labels, or its CSS into
+  this repository. A site states how it differs from the shared content
+  in its manifest (`footer.changes`), by id. A site that adopts the package adds a manifest
   and a row in `consumers.json`, and `GH_CONSUMERS_TOKEN` gains read on
   its repository. A change to the manifest's shape is a change to every
   site's manifest, so it lands in `registry.ts` with the sites' PRs.
