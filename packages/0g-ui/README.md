@@ -177,7 +177,8 @@ header renders exactly as in 0.1.0.
 
 `SiteFooter` is one layout at three widths, the same on every 0G site:
 the design's 300px row from lg; on tablets every column in one row, then
-the newsletter at the left and the socials at the right; on phones the
+on the same grid the newsletter under the first column and the socials
+under the first of the right half; on phones the
 columns in pairs, as equal halves with the right one never under the
 172px four social boxes need (a column with `phone: false`, Enterprise,
 is left out there). The columns, socials and legal row are shared content in
