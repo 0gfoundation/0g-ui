@@ -144,13 +144,14 @@ kept until the base moves.
 ## Release
 
 Bump `version` in `packages/0g-ui/package.json`, merge, tag
-`0g-ui-v<version>` on `main`. The tag publishes to GitHub Packages
-(`.github/workflows/publish.yml`), but the sites pin the tag as a git
+`0g-ui-v<version>` on `main`. CI fails a tag that does not match
+`version`. Nothing is published: the sites pin the tag as a git
 dependency, with pnpm:
 `git+https://github.com/0gfoundation/0g-ui.git#0g-ui-v<version>&path:packages/0g-ui`.
-Never propose GitHub Packages as a site's install source: its registry
-needs a classic token outside Actions and the org forbids them
-(0g-hub#308). And never an npm consumer: `&path:` is pnpm-only, and npm
+Never propose a registry as a site's install source: GitHub Packages
+was ruled out because its registry needs a classic token outside
+Actions and the org forbids them (0g-hub#308, ADR-0001). And never an
+npm consumer: `&path:` is pnpm-only, and npm
 installs the wrong package without an error. The repository is public,
 so a site's clone needs no token. `packages/0g-ui/README.md` under
 Install has the `allowBuilds` key a consumer needs.

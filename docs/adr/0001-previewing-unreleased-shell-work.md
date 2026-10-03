@@ -45,8 +45,8 @@ lockfile imports from `package-lock.json` with every resolved version
 unchanged, and Vercel reads the pnpm version from `packageManager` with
 no project setting.
 
-`publish.yml` keeps publishing each tag to GitHub Packages for anything
-running inside Actions, but no site installs from there.
+No tag is published to a registry. A site installs from git, and that is
+the only install path.
 
 ### 2. Unreleased work is pinned by commit
 
@@ -83,7 +83,7 @@ and leaves draft.
   prints the one it wants, and the PR comment carries it.
 - Each site needs `GH_PACKAGES_TOKEN`, fine-grained, Contents read on this
   repository, in CI and on its hosting project. Despite the name it is a
-  clone token (0g-hub#465). No longer true since 2026-10-04: this
+  clone token (0g-hub#465). No longer true since 2026-10-03: this
   repository is public and clones without a token. A site keeps the token
   only for another private dependency (the hub's `0g-market-data`).
 - A site stack that cannot use pnpm, if one appears, has no way to install

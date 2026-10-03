@@ -32,10 +32,8 @@ ignores it and installs this repository's root package, which exports
 nothing, without an error. An npm site moves to pnpm first (`0g-site#52`
 did, in one PR).
 
-Not from GitHub Packages, though `publish.yml` puts every tag there. Its
-npm registry asks for a token even for a public package, and only takes
-classic personal access tokens from outside Actions, which the org
-forbids, so no Vercel build can read it (0g-hub#308).
+Git is the only install path. No version is published to a registry
+(ADR-0001 has why).
 
 ### `prepare` builds `dist`
 
