@@ -40,13 +40,21 @@ Git is the only install path. No version is published to a registry
 A git install gets the repository tree, which carries no `dist`, so the
 package's `prepare` script builds it on install. pnpm asks first, and
 keys the approval on the resolved commit, not the tag, so the key
-changes with every repin (`pnpm install` prints the one it wants):
+changes with every repin (`pnpm install` prints the one it wants). The
+repository is public, so pnpm fetches the commit as a codeload tarball
+rather than cloning it, and the key names that tarball, whatever the
+dependency line in `package.json` says:
 
 ```yaml
 # pnpm-workspace.yaml
 allowBuilds:
-  '@0gfoundation/0g-ui@git+https://github.com/0gfoundation/0g-ui.git#<sha>&path:packages/0g-ui': true
+  '@0gfoundation/0g-ui@https://codeload.github.com/0gfoundation/0g-ui/tar.gz/<sha>#path:packages/0g-ui': true
 ```
+
+A key in the older `git+https://…#<sha>&path:packages/0g-ui` form, from
+before the repository was public, keeps working for the lockfile that
+recorded it, and fails the install (`ERR_PNPM_GIT_DEP_PREPARE_NOT_ALLOWED`)
+on the next repin.
 
 ### Unreleased work: pin the PR's commit
 
