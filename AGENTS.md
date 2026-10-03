@@ -12,8 +12,8 @@ tab bar with its icons, the scroll behaviour, the footer with the content
 every site's footer shares, the pill buttons, the `.shell-*` CSS with the
 tokens it reads, and the theme mechanism as its own entry (0g-ui#9 added
 the footer and buttons, once the hub became the footer's second site). A
-consumer passes its lockup, its nav items and its controls as props and
-its labels as strings, states how its footer differs from the shared one,
+consumer names its product for the default lockup (or passes its own),
+passes its nav items and its controls as props and its labels as strings, states how its footer differs from the shared one,
 and reads `Link` and `pathname` from `ShellProvider`. Nothing
 in the package knows about wallets, chains, prices, analytics or fonts.
 
@@ -53,7 +53,8 @@ Three rules keep it portable (ADR-0012 §2):
   marks), `site-footer.tsx` (the footer's three layouts),
   `footer-content.ts` (its shared content and how a site's changes apply),
   `footer-link.tsx`, `newsletter-form.tsx` and `social-glyphs.tsx` (its
-  pieces), `button.tsx` (the pills), and
+  pieces), `button.tsx` (the pills), `lockup.tsx` (the header's default
+  lockup), and
   `theme/` (the `./theme` entry: bootstrap string, hook, `ThemeButton`)
 - `packages/0g-ui/src/tailwind.css` — the Tailwind source entry: the
   tokens, the `dark` variant, the shadow routing, the base-layer

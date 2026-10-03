@@ -48,7 +48,7 @@ export function App() {
     <>
       <div className="pg-page">
         <SiteHeader
-          logo={<Logo />}
+          product="UI"
           items={ITEMS}
           navLabel="Main"
           controls={

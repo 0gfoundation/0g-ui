@@ -8,8 +8,9 @@
  * Every class is written out in full per breakpoint because the host's
  * Tailwind generates only class names it finds in the shipped modules.
  * The same breakpoint drives the phone scroll behaviour (ShellScroll's
- * `collapse`, shell.css under [data-shell-collapse]) and the menu's
- * close-on-resize, so all three move together.
+ * `collapse`, shell.css under [data-shell-collapse]), the menu's
+ * close-on-resize and the default lockup's two sizes, so all of them
+ * move together.
  */
 export type ShellCollapse = "lg" | "md";
 
@@ -28,6 +29,10 @@ export const COLLAPSE_CLASSES = {
     gap: "lg:gap-4",
     showNav: "lg:block",
     hideOnDesktop: "lg:hidden",
+    lockupGap: "lg:gap-3",
+    lockupMark: "lg:h-[31px] lg:w-[64px]",
+    lockupRule: "lg:block",
+    lockupName: "lg:text-[16px] lg:leading-[22px]",
   },
   md: {
     header: "md:px-8 md:pt-6",
@@ -38,5 +43,9 @@ export const COLLAPSE_CLASSES = {
     gap: "md:gap-4",
     showNav: "md:block",
     hideOnDesktop: "md:hidden",
+    lockupGap: "md:gap-3",
+    lockupMark: "md:h-[31px] md:w-[64px]",
+    lockupRule: "md:block",
+    lockupName: "md:text-[16px] md:leading-[22px]",
   },
 } as const satisfies Record<ShellCollapse, Record<string, string>>;

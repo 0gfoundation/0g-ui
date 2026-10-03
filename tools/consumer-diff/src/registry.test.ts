@@ -57,6 +57,19 @@ describe("a manifest", () => {
     expect(checkConsumer(consumer, exports)).toEqual([]);
   });
 
+  it("needs no logo stub where the package draws the lockup, and keeps the product's name as written", () => {
+    const manifest = evaluateManifest(HUB_LIKE, "hub") as Manifest;
+    const withProduct = { ...manifest, header: { ...manifest.header, product: "Hub" }, fixture: { path: "/swap" } };
+    expect(checkManifest(withProduct)).toEqual([]);
+    expect(checkManifest({ ...withProduct, header: manifest.header })).toEqual(["fixture needs path, and logo unless header.product"]);
+    const consumer = resolveManifest(entry, "main", withProduct, MESSAGES);
+    expect(consumer.header.product).toBe("Hub");
+    expect(checkConsumer(consumer, exports)).toEqual([]);
+    expect(checkConsumer(consumer, { ...exports, Lockup: undefined })).toEqual([
+      "the site draws the default lockup, and this build has none",
+    ]);
+  });
+
   it("names a label its messages lack", () => {
     const manifest = evaluateManifest(HUB_LIKE, "hub") as Manifest;
     expect(() => resolveManifest(entry, "main", manifest, { nav: { primary: "Main" } })).toThrow(

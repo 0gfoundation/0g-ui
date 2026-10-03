@@ -68,6 +68,11 @@
   --color-hairline-strong: #b8b8c0;
   --color-on-ink: #ffffff;
 
+  /* The default lockup's divider, between the mark and the product's
+     name (0g-ui#12). PUR 070 in the hub's dark design, which has no
+     light theme yet: the light value is NEU 020 until Kevin draws one. */
+  --color-lockup-rule: var(--color-hairline-strong);
+
   /* Header controls (the theme button): a quiet white pill with a
      hairline in light, the elevated plum in dark. */
   --color-control: #ffffff;
@@ -141,6 +146,7 @@
   --color-nav-title: #865cf6;
   --color-nav-title-hover: #cb8aff;
   --color-nav-link-hover: #e3c1ff;
+  --color-lockup-rule: #36236a;
   --shadow-nav-panel: 0 18px 48px -8px rgba(0, 0, 0, 0.5);
   /* The hub's dark footer (Kevin's hub designs, 2026-10). */
   --color-footer-heading: #53389d;
