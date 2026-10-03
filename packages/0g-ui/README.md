@@ -103,12 +103,23 @@ const items: ShellItem[] = [
 ];
 
 <ShellProvider Link={Link} pathname={usePathname()}>
-  <SiteHeader logo={<Logo />} items={items} navLabel="Main" controls={<Controls />} />
+  <SiteHeader product="Hub" items={items} navLabel="Main" controls={<Controls />} />
   <main>…</main>
   <TabBar items={items} label="Main" />
   <ShellScroll />
 </ShellProvider>;
 ```
+
+The lockup is the package's: the 0G mark, and with `product` a divider
+and the product's name (Hub 2026, `302:12752` and `302:12702`). Without
+`product` it is the mark alone. It links to `/` through the provider's
+`Link`, named "0G Hub" with a product and "0G" without, and takes its
+desktop size (mark 64×31, name 16/22) wherever the bar is, so it moves
+with `collapse`. On phones the mark is 48×23 and the name 14/20, with no
+divider. The divider reads `--color-lockup-rule`. A site with a lockup of
+its own passes `logo`, which wins over `product`. The default is
+exported as `Lockup` (`<Lockup product="Hub" />`) for a site that wraps
+it.
 
 `items` is shared by the two navs so they cannot drift: `href`, `label`,
 `icon`, `external?`, `shortLabel?` for the phone tab, five at most, the
@@ -173,8 +184,8 @@ const items: ShellNavEntry[] = [
   two columns. The default, `"lg"`, is the drafts'.
 - `isActive` treats `/` as active on `/` alone.
 
-Without groups, `menu`, `width` or `collapse` the header renders exactly
-as in 0.1.0.
+Without groups, `menu`, `width` or `collapse`, and with `logo`, the
+header renders exactly as in 0.1.0.
 
 ### The footer
 
@@ -292,8 +303,8 @@ inherits the body's font.
 
 The tokens it reads, with the 0G values as defaults and the dark values
 keyed on `[data-theme="dark"]`: `--color-brand-900`, `--color-brand-500`,
-`--color-bg`, `--color-ink`, `--color-line`, `--color-control`,
-`--color-control-hover`, `--color-on-control`, `--color-glass`,
+`--color-bg`, `--color-ink`, `--color-line`, `--color-lockup-rule`,
+`--color-control`, `--color-control-hover`, `--color-on-control`, `--color-glass`,
 `--color-glass-line`, `--shadow-glass`, the neutrals the footer and
 buttons read, `--color-ink-soft`, `--color-ink-muted`, `--color-hairline`,
 `--color-hairline-strong`, `--color-on-ink`, the footer's surface,

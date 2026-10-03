@@ -85,7 +85,7 @@ export const manifest = {
   css: "tailwind.css",                 // or "shell.css" for a host without Tailwind
   themes: ["light", "dark"],           // "dark" only if something stamps data-theme
   messages: { file: "messages/en.json", namespace: "nav" }, // optional: labels are keys in it
-  header: { navLabel, items, width, menu },  // what the site's header passes the shell
+  header: { navLabel, items, width, menu, product },  // what the site's header passes the shell
   tabBar: { label },                   // if it renders the phone tab bar
   footer: {                            // if it renders SiteFooter
     changes: { remove: ["faucet"], add: { build: [{ id, label, href }] } }, // vs the shared content
@@ -95,7 +95,7 @@ export const manifest = {
   },
   fixture: {                           // for the diff alone
     path: "/swap",                     // the page it stands on, for the active entry
-    logo: { label, width, height },    // the site's lockup, as a block its size
+    logo: { label, width, height },    // the site's own lockup as a block its size, unless header.product
     title, controls, layout, hostCss,  // controls as sized stubs, CSS that reaches the shell
     footerBackground: "linear-gradient(…)", // a stand-in for the footer's art
   },

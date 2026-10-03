@@ -71,6 +71,10 @@ export type Manifest = {
     width?: "fixed" | "grow";
     collapse?: "lg" | "md";
     menu?: { label: string; closeLabel: string };
+    /** The product the package's default lockup names ("Hub"), for a
+     *  site that draws it. Not a message key: a product's name is not
+     *  translated. Without it the site passes its own `logo`. */
+    product?: string;
   };
   /** The phone tab bar, over the header's items. */
   tabBar?: { label: string };
@@ -89,7 +93,9 @@ export type Manifest = {
   fixture: {
     /** The page the fixture stands on, for the active nav entry. */
     path: string;
-    logo: { label: string; width: number; height: number };
+    /** The site's own lockup, as a block its size. Not needed with
+     *  `header.product`, where the package draws the lockup. */
+    logo?: { label: string; width: number; height: number };
     /** A heading kept in the header for assistive tech. */
     title?: string;
     controls?: readonly Control[];
@@ -118,7 +124,8 @@ export type Consumer = {
   hostCss?: readonly string[];
   layout?: { maxWidth?: number; contentUnderHeader?: boolean };
   header: {
-    logo: { label: string; width: number; height: number };
+    logo?: { label: string; width: number; height: number };
+    product?: string;
     title?: string;
     navLabel: string;
     items: NavEntry[];
@@ -171,8 +178,12 @@ export function checkManifest(value: unknown): string[] {
   if (!isObject(m.header) || typeof m.header.navLabel !== "string" || !Array.isArray(m.header.items)) {
     problems.push("header needs navLabel and items");
   }
-  if (!isObject(m.fixture) || typeof m.fixture.path !== "string" || !isObject(m.fixture.logo)) {
-    problems.push("fixture needs path and logo");
+  const product = isObject(m.header) ? m.header.product : undefined;
+  if (product !== undefined && (typeof product !== "string" || product === "")) {
+    problems.push("header.product must be the product's name");
+  }
+  if (!isObject(m.fixture) || typeof m.fixture.path !== "string" || (product === undefined && !isObject(m.fixture.logo))) {
+    problems.push("fixture needs path, and logo unless header.product");
   }
   if (m.footer !== undefined) {
     const f = m.footer as unknown;
@@ -231,6 +242,7 @@ export function resolveManifest(entry: ConsumerEntry, ref: string, manifest: Man
     layout: fixture.layout,
     header: {
       logo: fixture.logo,
+      product: header.product,
       title: fixture.title,
       navLabel: say(header.navLabel),
       items,
@@ -268,6 +280,9 @@ export function checkConsumer(c: Consumer, exports: Record<string, unknown>): st
     if (link.icon && typeof exports[link.icon] !== "function") {
       problems.push(`icon ${link.icon} is not an export of @0gfoundation/0g-ui/shell`);
     }
+  }
+  if (c.header.product && typeof exports.Lockup !== "function") {
+    problems.push("the site draws the default lockup, and this build has none");
   }
   if (c.footer) {
     const check = exports.checkFooterChanges;

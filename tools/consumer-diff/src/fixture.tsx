@@ -43,6 +43,8 @@ const srOnly: CSSProperties = {
   border: 0,
 };
 
+const FOOTER_LOGO = { label: "0G", width: 80, height: 38 };
+
 /** A block the size of the site's lockup, in its ink. */
 function LogoStub({ label, width, height }: { label: string; width: number; height: number }) {
   return (
@@ -76,7 +78,9 @@ function FooterView({ consumer }: { consumer: Consumer }): ReactNode {
   const footer = consumer.footer;
   if (!footer || !SiteFooter) return null;
   return createElement(SiteFooter, {
-    logo: <LogoStub {...consumer.header.logo} />,
+    // the footer's lockup is the site's own (0g-ui#9): the header's stub,
+    // or the design's 80×38 where the header draws the package's
+    logo: <LogoStub {...(consumer.header.logo ?? FOOTER_LOGO)} />,
     changes: footer.changes,
     labels: footer.labels,
     origin: footer.origin,
@@ -97,7 +101,8 @@ export function Fixture({ consumer }: { consumer: Consumer }) {
   const { header, tabBar, layout } = consumer;
   const items = toShellEntries(header.items);
   const headerProps: Record<string, unknown> = {
-    logo: <LogoStub {...header.logo} />,
+    // the package's lockup where the site draws it, else the site's own
+    ...(header.product ? { product: header.product } : { logo: header.logo && <LogoStub {...header.logo} /> }),
     title: header.title ? <h1 style={srOnly}>{header.title}</h1> : undefined,
     items,
     navLabel: header.navLabel,

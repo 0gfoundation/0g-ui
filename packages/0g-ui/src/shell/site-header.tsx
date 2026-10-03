@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import { COLLAPSE_CLASSES, type ShellCollapse } from "./collapse";
 import { cx } from "./cx";
 import type { ShellNavEntry } from "./items";
+import { Lockup } from "./lockup";
 import { MobileMenu } from "./mobile-menu";
 import { TopNav } from "./top-nav";
 
@@ -26,6 +27,10 @@ import { TopNav } from "./top-nav";
  * kept, so it floats over the content the way it floats over the ground
  * at the top. The drafts are static mocks; stickiness is ours (#409).
  *
+ * The lockup is the package's (lockup.tsx, 0g-ui#12): the mark, and with
+ * `product` a divider and the product's name. A site with its own passes
+ * `logo`, which wins.
+ *
  * `title` is for a host that keeps a heading in the header for assistive
  * tech (the drafts draw none); `controls` render in order after the nav,
  * so the host decides what sits at the corner.
@@ -39,6 +44,7 @@ import { TopNav } from "./top-nav";
  */
 export function SiteHeader({
   logo,
+  product,
   title,
   items,
   navLabel,
@@ -47,7 +53,11 @@ export function SiteHeader({
   width = "fixed",
   collapse = "lg",
 }: {
-  logo: ReactNode;
+  /** The site's own lockup, in place of the default (lockup.tsx). */
+  logo?: ReactNode;
+  /** The product the default lockup names after the mark ("Hub").
+   *  Without it the default is the mark alone. `logo` wins. */
+  product?: string;
   title?: ReactNode;
   items: readonly ShellNavEntry[];
   /** The nav's accessible name ("Main"). */
@@ -74,6 +84,7 @@ export function SiteHeader({
   };
 }) {
   const c = COLLAPSE_CLASSES[collapse];
+  const lockup = logo ?? <Lockup product={product} collapse={collapse} />;
   return (
     <header
       data-shell-header
@@ -88,7 +99,7 @@ export function SiteHeader({
           c.bar,
         )}
       >
-        {logo}
+        {lockup}
         {title}
         <div className={cx("ml-auto flex items-center gap-1.5", c.gap)}>
           <div className={cx("hidden", c.showNav)}>
@@ -98,7 +109,7 @@ export function SiteHeader({
               the slot would only add the gap before it. */}
           <div className={cx("flex items-center gap-1.5", !controls && c.hideOnDesktop)}>
             {controls}
-            {menu && <MobileMenu logo={logo} items={items} collapse={collapse} {...menu} />}
+            {menu && <MobileMenu logo={lockup} items={items} collapse={collapse} {...menu} />}
           </div>
         </div>
       </div>

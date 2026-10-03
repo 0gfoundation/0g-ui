@@ -29,6 +29,7 @@ export {
   type ShellLinkItem,
   type ShellNavEntry,
 } from "./items";
+export { Lockup } from "./lockup";
 export { MobileMenu } from "./mobile-menu";
 export {
   ShellProvider,
