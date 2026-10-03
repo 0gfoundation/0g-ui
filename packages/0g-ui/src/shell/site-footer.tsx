@@ -26,8 +26,9 @@ import { SocialGlyph } from "./social-glyphs";
  *   legal row under a hairline.
  * - Tablet (md to lg): the row does not fit and the design has no frame
  *   for it (0g-ui#18). Every column in one row, an equal track each; under
- *   them the newsletter at the left and the socials at the right, each at
- *   most half the row so they never meet; then the lockup.
+ *   them, on the same grid, the newsletter from the first column and the
+ *   socials from the first of the right half (under Enterprise, of four),
+ *   the split the phone's pairs make; then the lockup.
  * - Phone: the columns in pairs with the socials last (Products | Build,
  *   Ecosystem | Socials), a column with `phone: false` left out; then the
  *   newsletter, the lockup, and the legal row stacked. The pair are equal
@@ -89,19 +90,21 @@ export function SiteFooter({
           {background}
         </div>
       )}
-      {/* The side gutter is the design's 16px up to its 390px phone, then
-          grows with the width to meet the tablet's 32px at md, so a wide
-          phone's columns do not sit on the edge. A padding percentage is
-          of the footer's width. */}
-      <div className="mx-auto flex w-full max-w-[1064px] flex-col gap-6 px-[clamp(16px,calc(16px_+_(100%_-_390px)_*_16_/_378),32px)] pt-[40px] pb-[24px] md:gap-9 md:px-[32px] md:pt-[64px]">
+      <div className="mx-auto flex w-full max-w-[1064px] flex-col gap-6 px-[16px] pt-[40px] pb-[24px] md:gap-9 md:px-[32px] md:pt-[64px]">
         {before && <div className="mb-3 flex justify-center md:mb-0">{before}</div>}
 
         <div
           className="grid grid-cols-[minmax(0,1fr)_minmax(172px,1fr)] gap-x-4 gap-y-9 md:grid-cols-[repeat(var(--footer-columns),minmax(0,1fr))] md:gap-x-6 md:gap-y-12 lg:h-[300px] lg:grid-cols-[auto_repeat(var(--footer-columns),auto)_auto] lg:grid-rows-[auto_1fr] lg:justify-between lg:gap-x-10 lg:gap-y-0"
-          style={{ "--footer-columns": columns.length } as CSSProperties}
+          style={
+            {
+              "--footer-columns": columns.length,
+              // the grid line where a tablet's right half starts: Enterprise's, of four
+              "--footer-half": Math.floor(columns.length / 2) + 1,
+            } as CSSProperties
+          }
         >
           {newsletter && (
-            <div className="order-2 col-span-2 flex flex-col gap-4 md:col-[1/-1] md:row-start-2 md:max-w-1/2 md:justify-self-start lg:order-none lg:col-span-1 lg:col-start-1 lg:row-start-1 lg:max-w-none lg:justify-self-auto">
+            <div className="order-2 col-span-2 flex flex-col gap-4 md:row-start-2 md:[grid-column:1/var(--footer-half)] lg:order-none lg:col-span-1 lg:col-start-1 lg:row-start-1">
               <p className="text-[20px] leading-[1.3] font-medium tracking-normal text-footer-title [text-box:trim-both_cap_alphabetic] md:max-w-[180px]">
                 {say("newsletter")}
               </p>
@@ -142,7 +145,7 @@ export function SiteFooter({
           </nav>
 
           {socials.length > 0 && (
-            <div className="order-1 flex flex-col gap-5 md:col-[1/-1] md:row-start-2 md:max-w-1/2 md:justify-self-end lg:order-none lg:col-span-1 lg:row-span-2 lg:max-w-none lg:justify-self-auto lg:gap-4">
+            <div className="order-1 flex flex-col gap-5 md:row-start-2 md:[grid-column:var(--footer-half)/-1] lg:order-none lg:col-span-1 lg:row-span-2 lg:gap-4">
               <p className={heading}>{say("socials")}</p>
               <ul className="flex w-full flex-wrap gap-1 md:w-auto lg:w-[128px]">
                 {socials.map((social) => (

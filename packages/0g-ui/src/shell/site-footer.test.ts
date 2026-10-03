@@ -85,11 +85,20 @@ describe("the footer's layout", () => {
     expect(render()).toContain("grid-cols-[minmax(0,1fr)_minmax(172px,1fr)]");
   });
 
-  it("puts every column in one row on tablets, with the newsletter and socials under them at either end", () => {
+  it("puts every column in one row on tablets, with the newsletter and socials under them on the same grid", () => {
     const html = render({ newsletter: { endpoint: "/api/newsletter" } });
     expect(html).toContain("md:grid-cols-[repeat(var(--footer-columns),minmax(0,1fr))]");
-    expect(html).toMatch(/md:col-\[1\/-1\] md:row-start-2 md:max-w-1\/2 md:justify-self-start[^"]*"><p[^>]*>Sign up/);
-    expect(html).toMatch(/md:col-\[1\/-1\] md:row-start-2 md:max-w-1\/2 md:justify-self-end[^"]*"><p[^>]*>Socials/);
+    expect(html).toMatch(/md:row-start-2 md:\[grid-column:1\/var\(--footer-half\)\][^"]*"><p[^>]*>Sign up/);
+    expect(html).toMatch(/md:row-start-2 md:\[grid-column:var\(--footer-half\)\/-1\][^"]*"><p[^>]*>Socials/);
+  });
+
+  it("starts the socials on the column line that opens the right half", () => {
+    expect(render()).toContain("--footer-half:3");
+    expect(render({ changes: { remove: ["enterprise"] } })).toContain("--footer-half:2");
+  });
+
+  it("keeps the side gutter at 16px on phones", () => {
+    expect(render()).toMatch(/ px-\[16px\] .* md:px-\[32px\]/);
   });
 });
 
