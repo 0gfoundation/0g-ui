@@ -32,6 +32,9 @@ jobs:
           SHA: ${{ github.event.pull_request.head.sha }}
         run: |
           SPEC="git+https://github.com/${REPO}.git#${SHA}&path:packages/0g-ui"
+          # The repository is public, so pnpm fetches the commit as a
+          # codeload tarball, and the build approval is keyed on that.
+          KEY="https://codeload.github.com/${REPO}/tar.gz/${SHA}#path:packages/0g-ui"
           MARKER="<!-- 0g-ui-pin -->"
           {
             echo "$MARKER"
@@ -45,7 +48,7 @@ jobs:
             echo
             echo '```yaml'
             echo "allowBuilds:"
-            echo "  '@0gfoundation/0g-ui@$SPEC': true"
+            echo "  '@0gfoundation/0g-ui@$KEY': true"
             echo '```'
             echo
             echo "Then \`pnpm install\`, and keep the site PR in draft. Once this merges and is"
