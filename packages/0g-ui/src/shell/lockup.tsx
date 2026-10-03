@@ -18,6 +18,13 @@ import { useShell } from "./provider";
  * that face at 700, so `font-bold` is the class that picks it. The mark
  * and the name paint in ink, the divider in `lockup-rule`.
  *
+ * The name is trimmed to its cap height and baseline (`text-box`), so
+ * `items-center` centres its capitals on the mark, as the design does
+ * (0g-ui#15). Its line box alone is 13 above the baseline to 3 below in
+ * Regola, which put the capitals 1.25 to 1.6px high. The span is a flex
+ * item, so it is blockified and the trim applies. Firefox has no
+ * `text-box` yet and keeps the offset.
+ *
  * It links home through the host's `Link`, named "0G Hub" with a product
  * and "0G" without. The mark is the wordmark's two paths, as the hub's
  * lockup inlined them, so it paints with currentColor.
@@ -41,7 +48,13 @@ export function Lockup({ product, collapse = "lg" }: { product?: string; collaps
       {product && (
         <>
           <span aria-hidden className={cx("hidden h-[30px] w-px bg-lockup-rule", c.lockupRule)} />
-          <span aria-hidden className={cx("text-[14px] leading-[20px] font-bold whitespace-nowrap", c.lockupName)}>
+          <span
+            aria-hidden
+            className={cx(
+              "text-[14px] leading-[20px] font-bold whitespace-nowrap [text-box:trim-both_cap_alphabetic]",
+              c.lockupName,
+            )}
+          >
             {product}
           </span>
         </>
