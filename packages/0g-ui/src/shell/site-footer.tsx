@@ -89,7 +89,11 @@ export function SiteFooter({
           {background}
         </div>
       )}
-      <div className="mx-auto flex w-full max-w-[1064px] flex-col gap-6 px-[16px] pt-[40px] pb-[24px] md:gap-9 md:px-[32px] md:pt-[64px]">
+      {/* The side gutter is the design's 16px up to its 390px phone, then
+          grows with the width to meet the tablet's 32px at md, so a wide
+          phone's columns do not sit on the edge. A padding percentage is
+          of the footer's width. */}
+      <div className="mx-auto flex w-full max-w-[1064px] flex-col gap-6 px-[clamp(16px,calc(16px_+_(100%_-_390px)_*_16_/_378),32px)] pt-[40px] pb-[24px] md:gap-9 md:px-[32px] md:pt-[64px]">
         {before && <div className="mb-3 flex justify-center md:mb-0">{before}</div>}
 
         <div
