@@ -3,7 +3,7 @@
   "version": "0.6.1",
   "description": "The shared 0G site shell (ADR-0012 in 0g-hub): the header, the phone tab bar and their scroll behaviour, the tokens they read, and the theme mechanism as an optional entry",
   "license": "UNLICENSED",
-  "private": false,
+  "private": true,
   "type": "module",
   "sideEffects": [
     "**/*.css"
@@ -24,10 +24,6 @@
       "types": "./dist/theme/index.d.ts",
       "import": "./dist/theme/index.js"
     }
-  },
-  "publishConfig": {
-    "registry": "https://npm.pkg.github.com",
-    "access": "restricted"
   },
   "repository": {
     "type": "git",

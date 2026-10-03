@@ -4,6 +4,7 @@ on:
   pull_request:
   push:
     branches: [main]
+    tags: ["0g-ui-v*"]
   workflow_dispatch:
 
 jobs:
@@ -11,6 +12,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      # A release tag names the version in packages/0g-ui/package.json, or
+      # the sites pin a tag whose package says something else.
+      - name: Tag matches the package version
+        if: startsWith(github.ref, 'refs/tags/0g-ui-v')
+        run: |
+          VERSION=$(node -p "require('./packages/0g-ui/package.json').version")
+          [ "${GITHUB_REF_NAME}" = "0g-ui-v${VERSION}" ] \
+            || { echo "tag ${GITHUB_REF_NAME} but package is ${VERSION}" >&2; exit 1; }
       - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
         with:

@@ -144,10 +144,9 @@ pnpm:
 "@0gfoundation/0g-ui": "git+https://github.com/0gfoundation/0g-ui.git#0g-ui-v0.6.1&path:packages/0g-ui"
 ```
 
-The tag also publishes to GitHub Packages, but no site installs from
-there: the registry needs a classic token outside Actions, and the org
-forbids them (0g-hub#308). What a consumer needs, pnpm and a build
-approval, is in [the package's README](packages/0g-ui/README.md).
+The tag is the release. Nothing is published to a registry, and CI fails
+a tag that does not match `version`. What a consumer needs, pnpm and a
+build approval, is in [the package's README](packages/0g-ui/README.md).
 
 ### A change that spans this repo and a site
 
