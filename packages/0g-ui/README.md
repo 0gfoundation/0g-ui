@@ -176,9 +176,11 @@ header renders exactly as in 0.1.0.
 ### The footer
 
 `SiteFooter` is one layout at three widths, the same on every 0G site:
-the design's 300px row from lg, a four-column grid on tablets, the
-columns in pairs on phones (a column with `phone: false`, Enterprise, is
-left out there). The columns, socials and legal row are shared content in
+the design's 300px row from lg; on tablets every column in one row, then
+the newsletter at the left and the socials at the right; on phones the
+columns in pairs, as equal halves with the right one never under the
+172px four social boxes need (a column with `phone: false`, Enterprise,
+is left out there). The columns, socials and legal row are shared content in
 the package (`FOOTER_CONTENT`, `footer-content.ts`); a site states only
 how its footer differs:
 
@@ -208,9 +210,27 @@ import { manifest } from "./0g-ui.manifest";
   ids of `FOOTER_LABELS` and of any column or link; English where absent.
   The entity, "Zero Gravity Labs Inc.", is not translated.
 - The newsletter posts `{ email }` as JSON to `endpoint` and reads
-  `{ ok, error }`, the contract of 0g.ai's `/api/newsletter`, the one
-  list. It says "signed up" only for a signup the server accepted.
+  `{ ok }` and the status, the contract of 0g.ai's `/api/newsletter`,
+  the one list. It says "signed up" only for a signup the server
+  accepted, and words a refusal by status in the site's `labels`.
   Without `newsletter` the footer has none.
+- Each submit ends in one `NewsletterOutcome` (`done`, `invalid`,
+  `limited`, `closed`, `failed`), dispatched on `window` as a
+  `NEWSLETTER_EVENT` (`"0g-ui:newsletter"`) whose detail is
+  `{ outcome }`. A site counts signups from a client component of its
+  own, since `SiteFooter` is a server component and no callback prop
+  reaches the form:
+
+  ```tsx
+  useEffect(() => {
+    const onOutcome = (e: CustomEvent<NewsletterEventDetail>) => track("newsletter", e.detail);
+    window.addEventListener(NEWSLETTER_EVENT, onOutcome);
+    return () => window.removeEventListener(NEWSLETTER_EVENT, onOutcome);
+  }, []);
+  ```
+
+  The detail is the outcome and nothing else. Never add the address to
+  what a listener sends.
 - Shared links are absolute, since the hub links to 0g.ai's pages; one on
   `origin` renders as an in-app path through the provider's `Link`, the
   rest open in a new tab.

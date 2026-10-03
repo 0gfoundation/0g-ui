@@ -3,7 +3,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 
 import { buttonClasses } from "./button";
-import { refusal } from "./newsletter-form";
+import { announceOutcome, NEWSLETTER_EVENT, refusal } from "./newsletter-form";
 import { SiteFooter } from "./site-footer";
 
 const render = (props: Partial<Parameters<typeof SiteFooter>[0]> = {}) =>
@@ -80,15 +80,43 @@ describe("SiteFooter", () => {
   });
 });
 
-describe("refusal", () => {
-  const labels = { email: "", submit: "", done: "", invalid: "INVALID", limited: "LIMITED", closed: "CLOSED", failed: "FAILED" };
+describe("the footer's layout", () => {
+  it("gives a phone's column pairs equal halves, the right one never under four social boxes", () => {
+    expect(render()).toContain("grid-cols-[minmax(0,1fr)_minmax(172px,1fr)]");
+  });
 
-  it("answers in the site's words by the route's status, not the server's English", () => {
-    expect(refusal(400, labels)).toBe("INVALID");
-    expect(refusal(429, labels)).toBe("LIMITED");
-    expect(refusal(503, labels)).toBe("CLOSED");
-    expect(refusal(502, labels)).toBe("FAILED");
-    expect(refusal(0, labels)).toBe("FAILED");
+  it("puts every column in one row on tablets, with the newsletter and socials under them at either end", () => {
+    const html = render({ newsletter: { endpoint: "/api/newsletter" } });
+    expect(html).toContain("md:grid-cols-[repeat(var(--footer-columns),minmax(0,1fr))]");
+    expect(html).toMatch(/md:col-\[1\/-1\] md:row-start-2 md:max-w-1\/2 md:justify-self-start[^"]*"><p[^>]*>Sign up/);
+    expect(html).toMatch(/md:col-\[1\/-1\] md:row-start-2 md:max-w-1\/2 md:justify-self-end[^"]*"><p[^>]*>Socials/);
+  });
+});
+
+describe("the newsletter's outcome", () => {
+  it("is the route's refusal by status, which the site words in its own labels", () => {
+    expect(refusal(400)).toBe("invalid");
+    expect(refusal(429)).toBe("limited");
+    expect(refusal(503)).toBe("closed");
+    expect(refusal(502)).toBe("failed");
+    expect(refusal(0)).toBe("failed");
+  });
+
+  it("is announced on window as the outcome alone, never the address", () => {
+    const target = new EventTarget();
+    const had = "window" in globalThis;
+    const previous = (globalThis as { window?: unknown }).window;
+    (globalThis as { window?: unknown }).window = target;
+    try {
+      const seen: unknown[] = [];
+      target.addEventListener(NEWSLETTER_EVENT, (e) => seen.push((e as CustomEvent).detail));
+      announceOutcome("limited");
+      expect(NEWSLETTER_EVENT).toBe("0g-ui:newsletter");
+      expect(seen).toEqual([{ outcome: "limited" }]);
+    } finally {
+      if (had) (globalThis as { window?: unknown }).window = previous;
+      else delete (globalThis as { window?: unknown }).window;
+    }
   });
 });
 

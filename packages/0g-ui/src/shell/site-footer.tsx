@@ -24,17 +24,20 @@ import { SocialGlyph } from "./social-glyphs";
  * - Desktop (lg): the design's 300px row. The newsletter over the lockup
  *   on the left, the columns, the socials, spread across the column; the
  *   legal row under a hairline.
- * - Tablet (md to lg): the row does not fit, so a four-column grid: the
- *   newsletter and the socials side by side, the columns, the lockup.
+ * - Tablet (md to lg): the row does not fit and the design has no frame
+ *   for it (0g-ui#18). Every column in one row, an equal track each; under
+ *   them the newsletter at the left and the socials at the right, each at
+ *   most half the row so they never meet; then the lockup.
  * - Phone: the columns in pairs with the socials last (Products | Build,
  *   Ecosystem | Socials), a column with `phone: false` left out; then the
- *   newsletter, the lockup, and the legal row stacked.
+ *   newsletter, the lockup, and the legal row stacked. The pair are equal
+ *   halves, except that the right one never drops under 172px, the four
+ *   social boxes in a row: at 390px that is the design's 170 and 172.
  *
  * One DOM for the three, ordered by grid placement, so the form renders
  * once. The lockup comes last in it, as it does on screen at every
- * width, so focus follows the page; only the phone's newsletter (after
- * the socials on screen) and the tablet's socials (beside the newsletter)
- * are out of step. The surface is token override, a token per element
+ * width, so focus follows the page; only the newsletter on phones and
+ * tablets (under the links on screen) is out of step. The surface is token override, a token per element
  * (`footer-*` and `field-*`, tailwind.css): a site redefines them on
  * `.shell-footer` (0g.ai: white on its landscape) and passes the art as
  * `background`.
@@ -86,15 +89,19 @@ export function SiteFooter({
           {background}
         </div>
       )}
-      <div className="mx-auto flex w-full max-w-[1064px] flex-col gap-6 px-[16px] pt-[40px] pb-[24px] md:gap-9 md:px-[32px] md:pt-[64px]">
+      {/* The side gutter is the design's 16px up to its 390px phone, then
+          grows with the width to meet the tablet's 32px at md, so a wide
+          phone's columns do not sit on the edge. A padding percentage is
+          of the footer's width. */}
+      <div className="mx-auto flex w-full max-w-[1064px] flex-col gap-6 px-[clamp(16px,calc(16px_+_(100%_-_390px)_*_16_/_378),32px)] pt-[40px] pb-[24px] md:gap-9 md:px-[32px] md:pt-[64px]">
         {before && <div className="mb-3 flex justify-center md:mb-0">{before}</div>}
 
         <div
-          className="grid grid-cols-[minmax(0,1fr)_172px] gap-x-4 gap-y-9 md:grid-cols-4 md:gap-x-6 md:gap-y-12 lg:h-[300px] lg:grid-cols-[auto_repeat(var(--footer-columns),auto)_auto] lg:grid-rows-[auto_1fr] lg:justify-between lg:gap-x-10 lg:gap-y-0"
+          className="grid grid-cols-[minmax(0,1fr)_minmax(172px,1fr)] gap-x-4 gap-y-9 md:grid-cols-[repeat(var(--footer-columns),minmax(0,1fr))] md:gap-x-6 md:gap-y-12 lg:h-[300px] lg:grid-cols-[auto_repeat(var(--footer-columns),auto)_auto] lg:grid-rows-[auto_1fr] lg:justify-between lg:gap-x-10 lg:gap-y-0"
           style={{ "--footer-columns": columns.length } as CSSProperties}
         >
           {newsletter && (
-            <div className="order-2 col-span-2 flex flex-col gap-4 md:order-1 lg:order-none lg:col-span-1 lg:col-start-1 lg:row-start-1">
+            <div className="order-2 col-span-2 flex flex-col gap-4 md:col-[1/-1] md:row-start-2 md:max-w-1/2 md:justify-self-start lg:order-none lg:col-span-1 lg:col-start-1 lg:row-start-1 lg:max-w-none lg:justify-self-auto">
               <p className="text-[20px] leading-[1.3] font-medium tracking-normal text-footer-title [text-box:trim-both_cap_alphabetic] md:max-w-[180px]">
                 {say("newsletter")}
               </p>
@@ -118,7 +125,7 @@ export function SiteFooter({
             {columns.map((column) => (
               <div
                 key={column.id}
-                className={`order-1 flex min-w-0 flex-col gap-5 md:order-3 lg:order-none lg:row-span-2 lg:gap-6 ${column.phone === false ? "max-md:hidden" : ""}`}
+                className={`order-1 flex min-w-0 flex-col gap-5 lg:order-none lg:row-span-2 lg:gap-6 ${column.phone === false ? "max-md:hidden" : ""}`}
               >
                 <p className={heading}>{footerLabel(labels, column.id, column.label)}</p>
                 <ul className="flex flex-col gap-4">
@@ -135,7 +142,7 @@ export function SiteFooter({
           </nav>
 
           {socials.length > 0 && (
-            <div className="order-1 flex flex-col gap-5 md:order-2 md:col-span-2 lg:order-none lg:col-span-1 lg:row-span-2 lg:gap-4">
+            <div className="order-1 flex flex-col gap-5 md:col-[1/-1] md:row-start-2 md:max-w-1/2 md:justify-self-end lg:order-none lg:col-span-1 lg:row-span-2 lg:max-w-none lg:justify-self-auto lg:gap-4">
               <p className={heading}>{say("socials")}</p>
               <ul className="flex w-full flex-wrap gap-1 md:w-auto lg:w-[128px]">
                 {socials.map((social) => (
@@ -153,7 +160,7 @@ export function SiteFooter({
             </div>
           )}
 
-          <div className="order-3 col-span-2 flex flex-col gap-2 pt-9 md:order-4 md:col-span-4 md:pt-0 lg:order-none lg:col-span-1 lg:col-start-1 lg:row-start-2 lg:self-end">
+          <div className="order-3 col-span-2 flex flex-col gap-2 pt-9 md:col-[1/-1] md:pt-0 lg:order-none lg:col-span-1 lg:col-start-1 lg:row-start-2 lg:self-end">
             {logo}
             <p className="text-[12px] leading-[1.5] font-light tracking-normal text-footer-tagline [text-box:trim-both_cap_alphabetic]">
               {say("tagline")}
