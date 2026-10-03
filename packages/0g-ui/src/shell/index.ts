@@ -52,6 +52,11 @@ export {
   type FooterNetwork,
   type FooterSocial,
 } from "./footer-content";
+export {
+  NEWSLETTER_EVENT,
+  type NewsletterEventDetail,
+  type NewsletterOutcome,
+} from "./newsletter-form";
 export { SiteFooter } from "./site-footer";
 export { SiteHeader } from "./site-header";
 export { TabBar } from "./tab-bar";

@@ -13,29 +13,50 @@ import { ArrowRightIcon } from "./glyphs";
  * says "signed up" only for a signup the server accepted. A refusal is
  * told by its status in the site's own words (`labels`), not in the
  * server's English, since the hub translates.
+ *
+ * Each submit ends in one outcome, and the form announces it on `window`
+ * as a `NEWSLETTER_EVENT` with `{ outcome }` as its detail, so a site can
+ * count signups (the hub must, ADR-0010) from a client component of its
+ * own while SiteFooter stays a server component, which no callback prop
+ * can cross (0g-ui#18). The detail is the outcome and nothing else: the
+ * address never goes in it, and a listener must not add it.
  */
 type State = { kind: "idle" } | { kind: "sending" } | { kind: "done" } | { kind: "error"; message: string };
 
+/** What a signup came to: accepted, or refused and why. */
+export type NewsletterOutcome = "done" | "invalid" | "limited" | "closed" | "failed";
+
+/** The event the form dispatches on `window`, once per submit. */
+export const NEWSLETTER_EVENT = "0g-ui:newsletter";
+
+export type NewsletterEventDetail = { outcome: NewsletterOutcome };
+
+declare global {
+  interface WindowEventMap {
+    "0g-ui:newsletter": CustomEvent<NewsletterEventDetail>;
+  }
+}
+
+/** Tells the page how a submit ended. The outcome only. */
+export function announceOutcome(outcome: NewsletterOutcome): void {
+  const detail: NewsletterEventDetail = { outcome };
+  window.dispatchEvent(new CustomEvent(NEWSLETTER_EVENT, { detail }));
+}
+
+/** The field's and button's names, and the reply to each outcome. */
 export type NewsletterLabels = {
   email: string;
   submit: string;
-  done: string;
-  /** 400: the address was refused. */
-  invalid: string;
-  /** 429: too many attempts from this visitor. */
-  limited: string;
-  /** 503: no list behind the route yet. */
-  closed: string;
-  /** Anything else, the network included. */
-  failed: string;
-};
+} & Record<NewsletterOutcome, string>;
 
-/** The reply to a refused signup, by the route's status. */
-export function refusal(status: number, labels: NewsletterLabels): string {
-  if (status === 400) return labels.invalid;
-  if (status === 429) return labels.limited;
-  if (status === 503) return labels.closed;
-  return labels.failed;
+/** A refused signup's outcome, by the route's status: 400 the address
+ *  was refused, 429 too many attempts, 503 no list behind the route yet,
+ *  anything else (the network included) failed. */
+export function refusal(status: number): Exclude<NewsletterOutcome, "done"> {
+  if (status === 400) return "invalid";
+  if (status === 429) return "limited";
+  if (status === 503) return "closed";
+  return "failed";
 }
 
 export function NewsletterForm({
@@ -54,6 +75,7 @@ export function NewsletterForm({
     event.preventDefault();
     const email = String(new FormData(event.currentTarget).get("email") ?? "").trim();
     setState({ kind: "sending" });
+    let outcome: NewsletterOutcome;
     try {
       const res = await fetch(endpoint, {
         method: "POST",
@@ -61,11 +83,12 @@ export function NewsletterForm({
         body: JSON.stringify({ email }),
       });
       const body = (await res.json().catch(() => ({}))) as { ok?: boolean };
-      if (res.ok && body.ok !== false) setState({ kind: "done" });
-      else setState({ kind: "error", message: refusal(res.ok ? 0 : res.status, labels) });
+      outcome = res.ok && body.ok !== false ? "done" : refusal(res.ok ? 0 : res.status);
     } catch {
-      setState({ kind: "error", message: labels.failed });
+      outcome = "failed";
     }
+    setState(outcome === "done" ? { kind: "done" } : { kind: "error", message: labels[outcome] });
+    announceOutcome(outcome);
   }
 
   if (state.kind === "done") {
