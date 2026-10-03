@@ -24,6 +24,10 @@ describe("SiteHeader's lockup", () => {
     expect(html).toMatch(/>Hub<\/span>/);
   });
 
+  it("trims the name to its capitals, so they centre on the mark", () => {
+    expect(render({ product: "Hub" })).toMatch(/class="[^"]*\[text-box:trim-both_cap_alphabetic\][^"]*">Hub<\/span>/);
+  });
+
   it("draws a site's own logo in its place, which wins over product", () => {
     const html = render({ logo: createElement("i", null, "OWN"), product: "Hub" });
     expect(html).toContain("<i>OWN</i>");
