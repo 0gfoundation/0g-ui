@@ -21,6 +21,10 @@ concurrency:
 
 jobs:
   diff:
+    # Not on a PR from a fork: it gets no GH_CONSUMERS_TOKEN to read the
+    # sites' manifests and a read-only token that cannot comment. A
+    # maintainer runs `pnpm consumer-diff --head <ref>` for one instead.
+    if: github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:

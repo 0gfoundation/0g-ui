@@ -120,6 +120,12 @@ Contents read on each listed repository, in this repository's Actions
 secrets) gains the new repository. A site that cannot be read shows in
 the comment as not read, and the rest still run.
 
+This repository is public, and the sites are not. The comment and the
+run's artifact show what each manifest renders, so a site's `ref` in
+`consumers.json` stays on a branch whose header is already live,
+`main`. A PR from a fork gets no diff, since it has no token to read the
+sites.
+
 To see a site change before it merges, read its manifest from a branch
 or a checkout:
 
@@ -135,13 +141,13 @@ tag `0g-ui-v<version>`. The sites pin the tag as a git dependency, with
 pnpm:
 
 ```json
-"@0gfoundation/0g-ui": "git+https://github.com/0gfoundation/0g-ui.git#0g-ui-v0.1.0&path:packages/0g-ui"
+"@0gfoundation/0g-ui": "git+https://github.com/0gfoundation/0g-ui.git#0g-ui-v0.6.1&path:packages/0g-ui"
 ```
 
 The tag also publishes to GitHub Packages, but no site installs from
 there: the registry needs a classic token outside Actions, and the org
-forbids them (0g-hub#308). What a consumer needs, pnpm and a clone token
-and a build approval, is in [the package's README](packages/0g-ui/README.md).
+forbids them (0g-hub#308). What a consumer needs, pnpm and a build
+approval, is in [the package's README](packages/0g-ui/README.md).
 
 ### A change that spans this repo and a site
 

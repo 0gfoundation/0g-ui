@@ -108,6 +108,12 @@ Three rules keep it portable (ADR-0012 §2):
   its own, with no site dependencies installed.
 - Read the consumer diff's comment before merging. A difference is not a
   failure, but every one should be one the PR meant.
+- This repository is public and the sites are not. The diff's comment and
+  artifact show what each site's manifest renders, so a site's `ref` in
+  `consumers.json` stays on `main`, never a branch with unreleased
+  navigation. Nothing private goes in an issue, a PR, a comment or a
+  commit here: no unreleased plans, credentials, preview URLs or legal
+  context.
 
 ## Commands
 
@@ -145,9 +151,9 @@ dependency, with pnpm:
 Never propose GitHub Packages as a site's install source: its registry
 needs a classic token outside Actions and the org forbids them
 (0g-hub#308). And never an npm consumer: `&path:` is pnpm-only, and npm
-installs the wrong package without an error. `packages/0g-ui/README.md`
-under Install has the clone token and the `allowBuilds` key a consumer
-needs.
+installs the wrong package without an error. The repository is public,
+so a site's clone needs no token. `packages/0g-ui/README.md` under
+Install has the `allowBuilds` key a consumer needs.
 
 A change that spans this repo and a site is two PRs, and the site's has
 to build first. The site pins this PR's head commit in draft, this

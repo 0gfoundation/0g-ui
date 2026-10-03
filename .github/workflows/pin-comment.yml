@@ -19,6 +19,9 @@ concurrency:
 
 jobs:
   comment:
+    # Not on a PR from a fork: its token is read-only and cannot comment,
+    # and no site pins a fork's commit.
+    if: github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
     steps:
       - name: Comment the pin

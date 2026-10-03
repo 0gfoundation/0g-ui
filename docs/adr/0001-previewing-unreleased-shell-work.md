@@ -83,6 +83,8 @@ and leaves draft.
   prints the one it wants, and the PR comment carries it.
 - Each site needs `GH_PACKAGES_TOKEN`, fine-grained, Contents read on this
   repository, in CI and on its hosting project. Despite the name it is a
-  clone token (0g-hub#465).
+  clone token (0g-hub#465). No longer true since 2026-10-04: this
+  repository is public and clones without a token. A site keeps the token
+  only for another private dependency (the hub's `0g-market-data`).
 - A site stack that cannot use pnpm, if one appears, has no way to install
   this package and needs its own decision.
