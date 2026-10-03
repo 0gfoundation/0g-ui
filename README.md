@@ -2,9 +2,9 @@
 
 `@0gfoundation/0g-ui`, the shared 0G site shell (ADR-0012 in
 `0gfoundation/0g-hub`): the header, the phone tab bar and their scroll
-behaviour, with the tokens they read and the theme mechanism as an
-optional entry. One design and one behaviour on every 0G site, each site
-with its own colours, menu, title and lockup.
+behaviour, the footer and the buttons, with the tokens they read and the
+theme mechanism as an optional entry. One design and one behaviour on
+every 0G site, each site with its own colours, menu, title and lockup.
 
 - `packages/0g-ui/` — the package ([README](packages/0g-ui/README.md))
 - `playground/` — a Vite page that renders the shell over sample items,
@@ -50,10 +50,11 @@ each site's manifest from the site's own repository, renders that site
 from the PR's merge result and from its base the way the site imports
 the package, and comments with the difference:
 
-- the header's and tab bar's markup, as a diff
+- the header's, tab bar's and footer's markup, as a diff
 - screenshots of every state at phone and desktop widths in each of the
   site's themes: the page top, after a scroll, each nav group's panel,
-  the phone menu and each group in it. Base, head and pixel-diff images
+  the phone menu and each group in it, and the footer whole at phone,
+  tablet and desktop widths. Base, head and pixel-diff images
   of every state that changed are in the run's artifact
 - the change in the gzipped JS and CSS the site's page ships
 - the change in the package's declarations
@@ -76,7 +77,7 @@ by hand.
 ### The manifest
 
 `consumers.json` only lists the sites: repository, the ref to read, and
-the path of the site's manifest. Everything about a site's header lives
+the path of the site's manifest. Everything about a site's shell lives
 in the site, in a TypeScript module that exports `manifest`:
 
 ```ts
@@ -86,16 +87,27 @@ export const manifest = {
   messages: { file: "messages/en.json", namespace: "nav" }, // optional: labels are keys in it
   header: { navLabel, items, width, menu },  // what the site's header passes the shell
   tabBar: { label },                   // if it renders the phone tab bar
+  footer: {                            // if it renders SiteFooter
+    changes: { remove: ["faucet"], add: { build: [{ id, label, href }] } }, // vs the shared content
+    newsletter: true,                  // whether it has the signup
+    origin: "https://0g.ai",           // its shared links on this origin are in-app paths
+    labels: { namespace: "footer" },   // optional: its strings by id, in `messages`
+  },
   fixture: {                           // for the diff alone
     path: "/swap",                     // the page it stands on, for the active entry
     logo: { label, width, height },    // the site's lockup, as a block its size
     title, controls, layout, hostCss,  // controls as sized stubs, CSS that reaches the shell
+    footerBackground: "linear-gradient(…)", // a stand-in for the footer's art
   },
 } as const;
 ```
 
-The site's header reads `header` and `tabBar` from this module, so what
-the diff renders is what the site renders, and nothing can drift. Icons
+The site's header reads `header` and `tabBar` from this module, and its
+footer reads `footer`, so what the diff renders is what the site
+renders, and nothing can drift. The footer's links, socials and legal
+row are not in it: they are the package's shared content
+(`footer-content.ts`), and a manifest states only how the site differs,
+by id. Icons
 are named by their export (`"DiscoverIcon"`). The diff fetches the file
 and evaluates it on its own, so it may import types and nothing else.
 `fixture` is the one part the site keeps by hand: when its lockup,

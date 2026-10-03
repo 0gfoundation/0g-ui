@@ -12,3 +12,25 @@
    (vite.config.ts aliases them), so scan those too and an edited class
    shows without a build. A host never needs this line. */
 @source "../../packages/0g-ui/src/shell";
+
+/* `?footer=art` (app.tsx): the footer's surface redefined on it, as 0g.ai
+   does over its landscape, and a gradient standing in for the art. */
+.pg-footer-art .shell-footer {
+  --color-footer-title: #ffffff;
+  --color-footer-heading: #ffffff;
+  --color-footer-text: #ffffff;
+  --color-footer-tagline: #ffffff;
+  --color-footer-rule: #ffffff;
+  --color-footer-social-line: #dcdfe4;
+  --color-footer-glyph: #ffffff;
+}
+/* The lockup is the site's, so the site colours it (0g.ai passes its
+   white one). */
+.pg-footer-art .shell-footer .pg-logo {
+  color: #ffffff;
+}
+.pg-footer-landscape {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, #9a83c9 0%, #7d5fb8 45%, #3d3a8c 100%);
+}

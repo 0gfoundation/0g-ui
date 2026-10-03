@@ -9,8 +9,8 @@
  * origin/main) and head (default: the working tree). Reads each site in
  * consumers.json from the manifest in its own repository (manifest.ts),
  * renders it from each build as the site imports it, and compares the
- * two: the header's and tab bar's markup, screenshots of each state at
- * phone and desktop widths in each of the site's themes, the gzipped JS
+ * two: the header's, tab bar's and footer's markup, screenshots of each
+ * state at phone and desktop widths in each of the site's themes, the gzipped JS
  * and CSS a page carries, and the package's declarations. Writes
  * report.md, the full diffs and a base, head and pixel-diff image for
  * every state that changed. It reports differences and sites it could
@@ -232,22 +232,25 @@ type Action =
   | { kind: "scroll" }
   | { kind: "group"; label: string }
   | { kind: "menu" }
-  | { kind: "menuGroup"; label: string };
+  | { kind: "menuGroup"; label: string }
+  | { kind: "footer" };
 
 type State = {
   id: string;
   viewport: keyof typeof VIEWPORTS;
   theme: "light" | "dark";
   action: Action;
-  /** Also read the shell's markup here: the header and tab bar, or the open menu. */
-  markup?: "shell" | "menu";
+  /** Also read the shell's markup here: the header and tab bar, the open
+   *  menu, or the footer. */
+  markup?: "shell" | "menu" | "footer";
 };
 
 /**
  * Every state worth a picture for a site: phone at the top and after a
  * scroll (the header gone, the tab bar compact), desktop, the wide bar
  * where it grows, each group's panel, the phone menu and each of its
- * groups. In each theme the site renders.
+ * groups, and the footer at each of its three layouts where the site
+ * has one. In each theme the site renders.
  */
 function statesFor(consumer: Consumer): State[] {
   const states: State[] = [];
@@ -267,6 +270,11 @@ function statesFor(consumer: Consumer): State[] {
       for (const label of groups) {
         states.push({ id: `${t}phone, menu, ${label}`, viewport: "phone", theme, action: { kind: "menuGroup", label } });
       }
+    }
+    if (consumer.footer) {
+      states.push({ id: `${t}footer, desktop`, viewport: "desktop", theme, action: { kind: "footer" }, markup: i === 0 ? "footer" : undefined });
+      states.push({ id: `${t}footer, tablet`, viewport: "tablet", theme, action: { kind: "footer" } });
+      states.push({ id: `${t}footer, phone`, viewport: "phone", theme, action: { kind: "footer" } });
     }
   });
   return states;
@@ -348,6 +356,12 @@ async function act(page: Page, action: Action, consumer: Consumer) {
       if ((await group.getAttribute("aria-expanded")) !== "true") await group.click({ timeout });
       return;
     }
+    case "footer": {
+      const footer = page.locator("footer.shell-footer");
+      if ((await footer.count()) === 0) throw new Error("not in this build");
+      await footer.scrollIntoViewIfNeeded({ timeout });
+      return;
+    }
   }
 }
 
@@ -372,7 +386,11 @@ async function capture(browser: Browser, url: string, state: State, consumer: Co
       return { unreachable: (error as Error).message.split("\n")[0] };
     }
     await settle(page);
-    const png = await page.screenshot({ animations: "disabled", caret: "hide" });
+    // The footer is taller than a phone's viewport: shoot the element whole.
+    const png =
+      state.action.kind === "footer"
+        ? await page.locator("footer.shell-footer").screenshot({ animations: "disabled", caret: "hide" })
+        : await page.screenshot({ animations: "disabled", caret: "hide" });
     let markup: string | undefined;
     if (state.markup === "shell") {
       markup = await page.evaluate(() =>
@@ -382,6 +400,8 @@ async function capture(browser: Browser, url: string, state: State, consumer: Co
       );
     } else if (state.markup === "menu") {
       markup = await page.evaluate(() => document.querySelector('[role="dialog"]')?.outerHTML ?? "");
+    } else if (state.markup === "footer") {
+      markup = await page.evaluate(() => document.querySelector("footer.shell-footer")?.outerHTML ?? "");
     }
     return { png, markup };
   } finally {

@@ -55,6 +55,19 @@
   --color-ink: #000000;
   --color-line: #e5e5e5;
 
+  /* The design system's neutral ramp by role (0g-ui#9), read by the
+     footer, the buttons and, through the nav-* aliases below, the nav
+     panels: ink-soft (NEU 040) for text a step under ink, ink-muted
+     (NEU 030) for secondary text, hairline (NEU 010) for rules and
+     outlines, hairline-strong (NEU 020) for a field's edge. on-ink is
+     what sits on an ink fill (the primary button's label). A site
+     restyles a surface by redefining these on it (.shell-footer). */
+  --color-ink-soft: #3a3b45;
+  --color-ink-muted: #7c7e89;
+  --color-hairline: #dcdfe4;
+  --color-hairline-strong: #b8b8c0;
+  --color-on-ink: #ffffff;
+
   /* Header controls (the theme button): a quiet white pill with a
      hairline in light, the elevated plum in dark. */
   --color-control: #ffffff;
@@ -75,12 +88,39 @@
      brand-900). Read only by the groups and the phone menu. */
   --color-nav-title: #4e3685;
   --color-nav-title-hover: #865cf6;
-  --color-nav-muted: #7c7e89;
-  --color-nav-heading: #3a3b45;
-  --color-nav-line: #dcdfe4;
-  --color-nav-chevron: #b8b8c0;
+  /* Four are the neutrals under panel names, aliased so they cannot
+     drift; a site that set a nav-* value directly still wins. */
+  --color-nav-muted: var(--color-ink-muted);
+  --color-nav-heading: var(--color-ink-soft);
+  --color-nav-line: var(--color-hairline);
+  --color-nav-chevron: var(--color-hairline-strong);
   --color-nav-link-hover: #cb8aff;
   --shadow-nav-panel: 0 18px 48px -8px rgba(9, 30, 66, 0.16);
+
+  /* The footer's surface (0g-ui#9), one token per element the designs
+     colour on their own: the hub's dark footer gives each a different
+     colour. In light they are the neutrals. A site restyles its footer
+     by redefining these on .shell-footer (0g.ai: white on its
+     landscape), never ink and its kin, which the slots read too.
+     footer-title is the newsletter heading and its replies, footer-text
+     the links and the legal row, footer-rule the hairline over that row,
+     footer-social-line and footer-glyph the social boxes. */
+  --color-footer-title: var(--color-ink);
+  --color-footer-heading: var(--color-ink);
+  --color-footer-text: var(--color-ink-muted);
+  --color-footer-tagline: var(--color-ink-soft);
+  --color-footer-rule: var(--color-hairline);
+  --color-footer-social-line: var(--color-hairline);
+  --color-footer-glyph: var(--color-ink-soft);
+
+  /* The newsletter's email field and its round submit. The submit stays
+     white in both footers, so it has its own fill rather than control. */
+  --color-field: var(--color-control);
+  --color-field-line: var(--color-hairline-strong);
+  --color-field-placeholder: color-mix(in srgb, var(--color-on-control) 40%, transparent);
+  --color-field-submit: var(--color-control);
+  --color-field-submit-ink: var(--color-on-control);
+  --color-field-submit-line: var(--color-hairline);
 }
 
 :root[data-theme="dark"] {
@@ -94,13 +134,27 @@
   --color-glass: rgba(50, 34, 76, 0.55);
   --color-glass-line: rgba(255, 255, 255, 0.12);
   --shadow-glass: 0 8px 32px rgba(0, 0, 0, 0.35);
+  --color-ink-soft: #7c7e89;
+  --color-hairline: #161619;
+  --color-hairline-strong: #7c7e89;
+  --color-on-ink: #0d0914;
   --color-nav-title: #865cf6;
   --color-nav-title-hover: #cb8aff;
-  --color-nav-heading: #7c7e89;
-  --color-nav-line: #161619;
-  --color-nav-chevron: #7c7e89;
   --color-nav-link-hover: #e3c1ff;
   --shadow-nav-panel: 0 18px 48px -8px rgba(0, 0, 0, 0.5);
+  /* The hub's dark footer (Kevin's hub designs, 2026-10). */
+  --color-footer-heading: #53389d;
+  --color-footer-text: #867e9f;
+  --color-footer-tagline: #ffffff;
+  --color-footer-rule: #1c132f;
+  --color-footer-social-line: #36236a;
+  --color-footer-glyph: #867e9f;
+  --color-field: #160e26;
+  --color-field-line: #53389d;
+  --color-field-placeholder: #865cf6;
+  --color-field-submit: #ffffff;
+  --color-field-submit-ink: #000000;
+  --color-field-submit-line: #ffffff;
 }
 
 /* Tailwind inlines a shadow token into its utility (it substitutes
@@ -138,25 +192,36 @@
   .shell-menu,
   .shell-menu *,
   .shell-menu *::before,
-  .shell-menu *::after {
+  .shell-menu *::after,
+  .shell-footer,
+  .shell-footer *,
+  .shell-footer *::before,
+  .shell-footer *::after,
+  .shell-button,
+  .shell-button * {
     box-sizing: border-box;
     margin: 0;
     padding: 0;
     border: 0 solid;
   }
   .shell-nav ul,
-  .shell-menu ul {
+  .shell-menu ul,
+  .shell-footer ul {
     list-style: none;
   }
   .shell-header a,
   .shell-nav a,
-  .shell-menu a {
+  .shell-menu a,
+  .shell-footer a,
+  a.shell-button {
     color: inherit;
     -webkit-text-decoration: inherit;
     text-decoration: inherit;
   }
   .shell-header button,
-  .shell-menu button {
+  .shell-menu button,
+  .shell-footer button,
+  button.shell-button {
     font: inherit;
     font-feature-settings: inherit;
     font-variation-settings: inherit;
@@ -167,9 +232,19 @@
     opacity: 1;
     appearance: button;
   }
+  /* The newsletter's field: the type, not the button's look. */
+  .shell-footer input {
+    font: inherit;
+    font-feature-settings: inherit;
+    font-variation-settings: inherit;
+    letter-spacing: inherit;
+    color: inherit;
+  }
   .shell-header svg,
   .shell-nav svg,
-  .shell-menu svg {
+  .shell-menu svg,
+  .shell-footer svg,
+  .shell-button svg {
     display: block;
     vertical-align: middle;
   }
