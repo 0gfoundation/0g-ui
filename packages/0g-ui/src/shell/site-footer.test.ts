@@ -3,7 +3,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 
 import { buttonClasses } from "./button";
-import { announceOutcome, NEWSLETTER_EVENT, refusal } from "./newsletter-form";
+import { announceOutcome, NEWSLETTER_EVENT, outcomeOf, refusal } from "./newsletter-form";
 import { SiteFooter } from "./site-footer";
 
 const render = (props: Partial<Parameters<typeof SiteFooter>[0]> = {}) =>
@@ -109,6 +109,32 @@ describe("the newsletter's outcome", () => {
     expect(refusal(503)).toBe("closed");
     expect(refusal(502)).toBe("failed");
     expect(refusal(0)).toBe("failed");
+  });
+
+  it("reads the worker's error code before the status: the bot check is not the address", () => {
+    expect(outcomeOf(200, { ok: true })).toBe("done");
+    expect(outcomeOf(400, { ok: false, error: "invalid_email" })).toBe("invalid");
+    expect(outcomeOf(400, { ok: false, error: "captcha_failed" })).toBe("verification");
+    expect(outcomeOf(400, { ok: false, error: "invalid_body" })).toBe("failed");
+    expect(outcomeOf(403, { ok: false, error: "origin_not_allowed" })).toBe("failed");
+    expect(outcomeOf(429, { ok: false, error: "rate_limited" })).toBe("limited");
+    expect(outcomeOf(500, {})).toBe("failed");
+  });
+
+  it("keeps 0g.ai's route readable: its errors are sentences, so the status decides", () => {
+    expect(outcomeOf(400, { ok: false, error: "Please enter a valid email address." })).toBe("invalid");
+    expect(outcomeOf(503, { ok: false, error: "Newsletter signups aren't open yet." })).toBe("closed");
+    expect(outcomeOf(200, { ok: false })).toBe("failed");
+  });
+
+  it("sends a honeypot every person leaves empty, and draws the bot check only with a site key", () => {
+    const plain = render({ newsletter: { endpoint: "/api/newsletter" } });
+    const honeypot = plain.match(/<input[^>]*name="website"[^>]*>/)?.[0] ?? "";
+    for (const attr of ['type="text"', 'tabindex="-1"', 'aria-hidden="true"', "left-[-9999px]"]) expect(honeypot).toContain(attr);
+    expect(plain).not.toContain("challenges.cloudflare.com");
+    const checked = render({ newsletter: { endpoint: "https://worker.example/subscribe", turnstile: { siteKey: "1x00000000000000000000AA" } } });
+    // the widget's container follows the field row; the script loads in the browser only
+    expect(checked.match(/<div><\/div>/g)?.length ?? 0).toBeGreaterThan(plain.match(/<div><\/div>/g)?.length ?? 0);
   });
 
   it("is announced on window as the outcome alone, never the address", () => {

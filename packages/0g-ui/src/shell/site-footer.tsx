@@ -59,8 +59,15 @@ export function SiteFooter({
   logo: ReactNode;
   /** Art behind the footer, filling it (0g.ai's landscape and its wash). */
   background?: ReactNode;
-  /** Where the signup posts. Without it the footer has no newsletter. */
-  newsletter?: { endpoint: string };
+  /** Where the signup posts. Without it the footer has no newsletter.
+   *  `turnstile` is Cloudflare Turnstile's public site key, for an
+   *  endpoint that checks a token (0G's newsletter worker); `source` names
+   *  the form to the list ("0g.ai-footer"). */
+  newsletter?: {
+    endpoint: string;
+    turnstile?: { siteKey: string; theme?: "light" | "dark" | "auto" };
+    source?: string;
+  };
   /** How this site's footer differs from the shared content. */
   changes?: FooterChanges;
   /** The site's strings by id: FOOTER_LABELS', and any column's or link's.
@@ -110,12 +117,15 @@ export function SiteFooter({
               </p>
               <NewsletterForm
                 endpoint={newsletter.endpoint}
+                turnstile={newsletter.turnstile}
+                source={newsletter.source}
                 id="shell-footer-email"
                 labels={{
                   email: say("email"),
                   submit: say("subscribe"),
                   done: say("subscribed"),
                   invalid: say("subscribeInvalid"),
+                  verification: say("subscribeVerification"),
                   limited: say("subscribeLimited"),
                   closed: say("subscribeClosed"),
                   failed: say("subscribeFailed"),

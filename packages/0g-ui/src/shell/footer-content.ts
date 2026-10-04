@@ -118,8 +118,11 @@ export const FOOTER_LABELS = {
   email: "Email",
   subscribe: "Sign up",
   subscribed: "Thanks, you're signed up.",
-  // the refusals, by the route's status (newsletter-form.tsx)
+  // the refusals, by the worker's error code or the route's status
+  // (newsletter-form.tsx)
   subscribeInvalid: "Please enter a valid email address.",
+  // the bot check (Turnstile) failed or never answered
+  subscribeVerification: "Verification failed, please try again.",
   subscribeLimited: "Too many attempts. Try again later.",
   subscribeClosed: "Newsletter signups aren't open yet. Please check back soon.",
   subscribeFailed: "Something went wrong.",

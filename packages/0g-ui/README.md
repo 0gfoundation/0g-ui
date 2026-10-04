@@ -210,13 +210,24 @@ import { manifest } from "./0g-ui.manifest";
 - `labels` maps ids to the site's strings (the hub's translations), the
   ids of `FOOTER_LABELS` and of any column or link; English where absent.
   The entity, "Zero Gravity Labs Inc.", is not translated.
-- The newsletter posts `{ email }` as JSON to `endpoint` and reads
-  `{ ok }` and the status, the contract of 0g.ai's `/api/newsletter`,
-  the one list. It says "signed up" only for a signup the server
-  accepted, and words a refusal by status in the site's `labels`.
-  Without `newsletter` the footer has none.
+- The newsletter posts `{ email, website }` as JSON to `endpoint` and
+  reads `{ ok, error }` and the status. `website` is a honeypot people
+  never see or fill. It says "signed up" only for a signup the server
+  accepted, and words a refusal in the site's `labels`: by the `error`
+  code where the server sends one (`invalid_email`, `captcha_failed`,
+  `rate_limited`), else by status. Without `newsletter` the footer has
+  none.
+- For 0G's newsletter worker, pass `newsletter.turnstile`
+  (`{ siteKey, theme? }`, Cloudflare Turnstile's public site key) and
+  `newsletter.source` (`"0g.ai-footer"`). The form loads Turnstile's
+  script once, renders the widget invisibly unless Cloudflare asks for an
+  interaction, and sends its one-time token as `turnstileToken`, waiting
+  for it when the submit comes first and resetting it after every
+  submit. The secret stays with the worker; a site never holds one. The
+  worker allows the origins its owner lists (0g.ai today), and Turnstile
+  the hostnames listed on the widget, so a new site is added in both.
 - Each submit ends in one `NewsletterOutcome` (`done`, `invalid`,
-  `limited`, `closed`, `failed`), dispatched on `window` as a
+  `verification`, `limited`, `closed`, `failed`), dispatched on `window` as a
   `NEWSLETTER_EVENT` (`"0g-ui:newsletter"`) whose detail is
   `{ outcome }`. A site counts signups from a client component of its
   own, since `SiteFooter` is a server component and no callback prop
