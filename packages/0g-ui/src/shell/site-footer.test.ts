@@ -12,18 +12,22 @@ const render = (props: Partial<Parameters<typeof SiteFooter>[0]> = {}) =>
 describe("SiteFooter", () => {
   it("renders the shared columns, the socials and the legal row with the operator sentence", () => {
     const html = render();
-    for (const text of ["Products", "Builder Hub", "Sales Team", "Foundation", "Socials", "The AI trust layer"]) {
+    for (const text of ["Products", "Builder Hub", "Company", "Contact Us", "Validators", "Socials", "The AI trust layer"]) {
       expect(html).toContain(text);
     }
     expect(html).toContain(`© ${new Date().getFullYear()} Zero Gravity Labs Inc. Operator and publisher of the 0G Hub. All rights reserved.`);
     expect(html).toContain('aria-label="LinkedIn"');
+    expect(html).toContain('aria-label="YouTube"');
     expect(html).toContain('<nav aria-label="Footer"');
   });
 
   it("hides a phone: false column below md and nothing else", () => {
-    const html = render();
+    expect(render()).not.toContain("max-md:hidden");
+    const html = render({
+      changes: { columns: [{ id: "more", label: "More", phone: false, links: [{ id: "status", label: "Status", href: "https://x" }] }] },
+    });
     expect(html.match(/max-md:hidden/g)).toHaveLength(1);
-    expect(html).toMatch(/max-md:hidden[^>]*><p[^>]*>Enterprise</);
+    expect(html).toMatch(/max-md:hidden[^>]*><p[^>]*>More</);
   });
 
   it("has a newsletter only where the site gives it an endpoint", () => {
@@ -60,7 +64,7 @@ describe("SiteFooter", () => {
   it("puts the lockup after the links and socials, where it is on screen, so focus follows", () => {
     const html = render({ newsletter: { endpoint: "/api/newsletter" }, logo: createElement("span", null, "LOCKUP") });
     expect(html.indexOf("Sign up for our newsletter")).toBeLessThan(html.indexOf("Products"));
-    expect(html.indexOf("LOCKUP")).toBeGreaterThan(html.indexOf('aria-label="Telegram"'));
+    expect(html.indexOf("LOCKUP")).toBeGreaterThan(html.indexOf('aria-label="YouTube"'));
     expect(html.indexOf("LOCKUP")).toBeLessThan(html.indexOf("All rights reserved"));
   });
 
@@ -81,8 +85,10 @@ describe("SiteFooter", () => {
 });
 
 describe("the footer's layout", () => {
-  it("gives a phone's column pairs equal halves, the right one never under four social boxes", () => {
-    expect(render()).toContain("grid-cols-[minmax(0,1fr)_minmax(172px,1fr)]");
+  it("gives a phone's column pairs equal halves, and the socials a row across both", () => {
+    const html = render();
+    expect(html).toContain("grid-cols-[minmax(0,1fr)_minmax(0,1fr)]");
+    expect(html).toMatch(/order-1 col-span-2 [^"]*"><p[^>]*>Socials/);
   });
 
   it("puts every column in one row on tablets, with the newsletter and socials under them on the same grid", () => {
