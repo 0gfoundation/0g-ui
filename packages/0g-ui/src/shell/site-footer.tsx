@@ -29,11 +29,10 @@ import { SocialGlyph } from "./social-glyphs";
  *   them, on the same grid, the newsletter from the first column and the
  *   socials from the first of the right half (under Enterprise, of four),
  *   the split the phone's pairs make; then the lockup.
- * - Phone: the columns in pairs with the socials last (Products | Build,
- *   Ecosystem | Socials), a column with `phone: false` left out; then the
- *   newsletter, the lockup, and the legal row stacked. The pair are equal
- *   halves, except that the right one never drops under 172px, the four
- *   social boxes in a row: at 390px that is the design's 170 and 172.
+ * - Phone: the columns in equal pairs (Products | Build, Enterprise |
+ *   Company), a column with `phone: false` left out; the socials in
+ *   one row across both; then the newsletter, the lockup, and the legal
+ *   row stacked.
  *
  * One DOM for the three, ordered by grid placement, so the form renders
  * once. The lockup comes last in it, as it does on screen at every
@@ -101,7 +100,7 @@ export function SiteFooter({
         {before && <div className="mb-3 flex justify-center md:mb-0">{before}</div>}
 
         <div
-          className="grid grid-cols-[minmax(0,1fr)_minmax(172px,1fr)] gap-x-4 gap-y-9 md:grid-cols-[repeat(var(--footer-columns),minmax(0,1fr))] md:gap-x-6 md:gap-y-12 lg:h-[300px] lg:grid-cols-[auto_repeat(var(--footer-columns),auto)_auto] lg:grid-rows-[auto_1fr] lg:justify-between lg:gap-x-10 lg:gap-y-0"
+          className="grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)] gap-x-4 gap-y-9 md:grid-cols-[repeat(var(--footer-columns),minmax(0,1fr))] md:gap-x-6 md:gap-y-12 lg:h-[300px] lg:grid-cols-[auto_repeat(var(--footer-columns),auto)_auto] lg:grid-rows-[auto_1fr] lg:justify-between lg:gap-x-10 lg:gap-y-0"
           style={
             {
               "--footer-columns": columns.length,
@@ -155,7 +154,7 @@ export function SiteFooter({
           </nav>
 
           {socials.length > 0 && (
-            <div className="order-1 flex flex-col gap-5 md:row-start-2 md:[grid-column:var(--footer-half)/-1] lg:order-none lg:col-span-1 lg:row-span-2 lg:gap-4">
+            <div className="order-1 col-span-2 flex flex-col gap-5 md:row-start-2 md:[grid-column:var(--footer-half)/-1] lg:order-none lg:col-span-1 lg:row-span-2 lg:gap-4">
               <p className={heading}>{say("socials")}</p>
               <ul className="flex w-full flex-wrap gap-1 md:w-auto lg:w-[128px]">
                 {socials.map((social) => (

@@ -8,8 +8,8 @@
  * Every column, link and label has a stable `id` beside its English text.
  * `remove` goes by id, so it survives a label edit, and the ids are the
  * keys a translated site maps to its own strings (`labels`). Only pages
- * and accounts that exist: the designs' Stories, Instagram and Facebook
- * stay out until they do.
+ * and accounts that exist: the designs' Stories, Mission & Team,
+ * Instagram and Facebook stay out until they do.
  */
 
 /** A link in a footer column. */
@@ -24,17 +24,16 @@ export type FooterColumn = {
   id: string;
   label: string;
   links: readonly FooterLink[];
-  /** Shown in the phone layout. The design leaves Enterprise out there,
-   *  its one link being the page's own sales call. Default true. */
+  /** Shown in the phone layout. Default true. */
   phone?: boolean;
 };
 
 /** The networks SiteFooter has a glyph for. */
-export type FooterNetwork = "linkedin" | "x" | "discord" | "github" | "telegram";
+export type FooterNetwork = "linkedin" | "x" | "discord" | "github" | "telegram" | "youtube";
 
 /** A social account: the network names its glyph and its accessible
  *  name. Its id for `remove` is `socials.<network>`, apart from the
- *  links' ids (the Build column has a GitHub link too). */
+ *  links' ids, so a site's link and account never collide. */
 export type FooterSocial = { network: FooterNetwork; href: string };
 
 export type FooterContent = {
@@ -55,13 +54,19 @@ export type FooterChanges = {
   socials?: readonly FooterSocial[];
 };
 
+// The design system's "footer links web" (38:4620) and "footer full
+// mobile" (228:25092), on every site, in the desktop frame's order:
+// Ecosystem became Company, as in the top nav, after Enterprise; Build
+// lost GitHub (it is in the socials) and gained the explorers and the
+// validators; Enterprise links its overview and the contact form, and
+// shows on phones too; YouTube joined the socials.
 export const FOOTER_CONTENT: FooterContent = {
   columns: [
     {
       id: "products",
       label: "Products",
       links: [
-        { id: "compute", label: "Compute", href: "https://pc.0g.ai" },
+        { id: "compute", label: "Compute", href: "https://compute.0g.ai" },
         { id: "storage", label: "Storage", href: "https://storage.0g.ai" },
         { id: "chain", label: "Chain", href: "https://chain.0g.ai" },
         { id: "hub", label: "0G Hub", href: "https://hub.0g.ai" },
@@ -73,26 +78,28 @@ export const FOOTER_CONTENT: FooterContent = {
       label: "Build",
       links: [
         { id: "builderHub", label: "Builder Hub", href: "https://build.0g.ai" },
-        { id: "docs", label: "Documents", href: "https://docs.0g.ai" },
-        { id: "github", label: "GitHub", href: "https://github.com/0gfoundation" },
+        { id: "docs", label: "Docs", href: "https://docs.0g.ai" },
+        { id: "chainScan", label: "Chain Scan", href: "https://chainscan.0g.ai" },
+        { id: "storageScan", label: "Storage Scan", href: "https://storagescan.0g.ai" },
         { id: "faucet", label: "Faucet", href: "https://faucet.0g.ai" },
+        { id: "validators", label: "Validators", href: "https://nodes.0g.ai/mainnet/validators" },
       ],
     },
     {
       id: "enterprise",
       label: "Enterprise",
-      phone: false,
-      links: [{ id: "sales", label: "Sales Team", href: "https://0g.ai/contact" }],
+      links: [
+        { id: "enterpriseOverview", label: "Overview", href: "https://0g.ai/pc/enterprise" },
+        { id: "contact", label: "Contact Us", href: "https://0g.ai/contact" },
+      ],
     },
     {
-      id: "ecosystem",
-      label: "Ecosystem",
+      id: "company",
+      label: "Company",
       links: [
         { id: "research", label: "Research", href: "https://research.0g.ai" },
-        // the FAQ carries the founders; there is no about page
-        { id: "about", label: "About Us", href: "https://0g.ai/faq" },
-        { id: "blog", label: "Blog", href: "https://0g.ai/blog" },
         { id: "foundation", label: "Foundation", href: "https://www.0gfoundation.ai" },
+        { id: "blog", label: "Blog", href: "https://0g.ai/blog" },
         { id: "press", label: "Press", href: "https://0g.ai/press" },
       ],
     },
@@ -103,6 +110,7 @@ export const FOOTER_CONTENT: FooterContent = {
     { network: "discord", href: "https://discord.com/invite/0glabs" },
     { network: "github", href: "https://github.com/0gfoundation" },
     { network: "telegram", href: "https://t.me/zgcommunity" },
+    { network: "youtube", href: "https://www.youtube.com/@0G_Labs" },
   ],
 };
 
@@ -149,6 +157,7 @@ export const NETWORK_NAMES: Record<FooterNetwork, string> = {
   discord: "Discord",
   github: "GitHub",
   telegram: "Telegram",
+  youtube: "YouTube",
 };
 
 /** A social's id for `remove`. */

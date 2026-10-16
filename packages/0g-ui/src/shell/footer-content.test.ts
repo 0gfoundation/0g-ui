@@ -17,14 +17,18 @@ describe("the shared footer content", () => {
     expect(new Set(all).size).toBe(all.length);
   });
 
-  it("keeps the socials apart from the links: the GitHub link and the GitHub account are two ids", () => {
-    expect(ids()).toContain("github");
+  it("keeps the socials' ids apart from the links': a site's GitHub link would not be the GitHub account", () => {
     expect(FOOTER_CONTENT.socials.map(socialId)).toContain("socials.github");
+    expect(ids()).not.toContain("socials.github");
   });
 
-  it("leaves Enterprise out of the phone layout, as the design does", () => {
-    expect(FOOTER_CONTENT.columns.find((c) => c.id === "enterprise")?.phone).toBe(false);
-    expect(FOOTER_CONTENT.columns.filter((c) => c.phone === false)).toHaveLength(1);
+  it("matches the design: Enterprise then Company, every column on phones, YouTube last", () => {
+    expect(FOOTER_CONTENT.columns.map((c) => c.id)).toEqual(["products", "build", "enterprise", "company"]);
+    expect(FOOTER_CONTENT.columns.filter((c) => c.phone === false)).toEqual([]);
+    expect(FOOTER_CONTENT.socials.at(-1)?.network).toBe("youtube");
+    // GitHub is a social only, About Us went with the FAQ it linked to
+    expect(ids()).not.toContain("github");
+    expect(ids()).not.toContain("about");
   });
 });
 
@@ -38,25 +42,22 @@ describe("applyFooterChanges", () => {
     expect(ids(out)).not.toContain("faucet");
     expect(out.columns.map((c) => c.id)).not.toContain("enterprise");
     expect(out.socials.map((s) => s.network)).not.toContain("telegram");
-    // the GitHub link stays when only the account goes, and the reverse
-    expect(ids(applyFooterChanges(FOOTER_CONTENT, { remove: ["socials.github"] }))).toContain("github");
-    expect(applyFooterChanges(FOOTER_CONTENT, { remove: ["github"] }).socials.map(socialId)).toContain("socials.github");
   });
 
   it("appends a site's links to a shared column, and its own columns and socials after the shared ones", () => {
     const out = applyFooterChanges(FOOTER_CONTENT, {
-      add: { build: [{ id: "storageScan", label: "Storage Scan", href: "https://storagescan.0g.ai" }] },
+      add: { build: [{ id: "bridge", label: "Bridge", href: "https://hub.0g.ai/bridge" }] },
       columns: [{ id: "legalMore", label: "More", links: [{ id: "status", label: "Status", href: "https://status.0g.ai" }] }],
       socials: [{ network: "x", href: "https://x.com/0g_hub" }],
     });
     const build = out.columns.find((c) => c.id === "build")!;
-    expect(build.links.at(-1)?.id).toBe("storageScan");
+    expect(build.links.at(-1)?.id).toBe("bridge");
     expect(out.columns.at(-1)?.id).toBe("legalMore");
     expect(out.socials.at(-1)?.href).toBe("https://x.com/0g_hub");
   });
 
   it("drops a column whose links were all removed, rather than draw a heading over nothing", () => {
-    const out = applyFooterChanges(FOOTER_CONTENT, { remove: ["sales"] });
+    const out = applyFooterChanges(FOOTER_CONTENT, { remove: ["enterpriseOverview", "contact"] });
     expect(out.columns.map((c) => c.id)).not.toContain("enterprise");
   });
 });
@@ -84,7 +85,7 @@ describe("checkFooterChanges", () => {
   });
 
   it("reports an added id that is a label's, which would take that label's translation", () => {
-    expect(checkFooterChanges(FOOTER_CONTENT, { add: { ecosystem: [{ id: "terms", label: "Terms", href: "https://z" }] } })).toEqual([
+    expect(checkFooterChanges(FOOTER_CONTENT, { add: { company: [{ id: "terms", label: "Terms", href: "https://z" }] } })).toEqual([
       "footer: terms is already a shared id",
     ]);
   });
