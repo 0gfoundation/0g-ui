@@ -218,11 +218,12 @@ import { manifest } from "./0g-ui.manifest";
   none.
 - For 0G's newsletter worker, pass `newsletter.turnstile`
   (`{ siteKey, theme? }`, Cloudflare Turnstile's public site key) and
-  `newsletter.source` (`"0g.ai-footer"`). The form loads Turnstile's
-  script once, renders the widget invisibly unless Cloudflare asks for an
-  interaction, and sends its one-time token as `turnstileToken`, waiting
-  for it when the submit comes first and resetting it after every
-  submit. The secret stays with the worker; a site never holds one. The
+  `newsletter.source` (`"0g.ai-footer"`). The bot check is a second step
+  of the submit: nothing of Turnstile runs at page load, focusing the
+  field fetches its script, and a submit renders the widget (invisible
+  unless Cloudflare asks for an interaction, which then shows under the
+  field), waits for its one-time token, posts it as `turnstileToken`, and
+  removes the widget. The secret stays with the worker; a site never holds one. The
   worker allows the origins its owner lists (0g.ai today), and Turnstile
   the hostnames listed on the widget, so a new site is added in both.
 - Each submit ends in one `NewsletterOutcome` (`done`, `invalid`,

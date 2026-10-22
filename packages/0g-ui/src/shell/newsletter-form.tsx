@@ -22,13 +22,15 @@ import { loadTurnstile, type TurnstileApi } from "./turnstile";
  * can cross (0g-ui#18). The detail is the outcome and nothing else: the
  * address never goes in it, and a listener must not add it.
  *
- * For 0G's newsletter worker (`newsletter.turnstile`): the form renders a
- * Cloudflare Turnstile widget, invisible unless Cloudflare wants an
- * interaction, and sends its one-time token as `turnstileToken`, waiting
- * for it if the submit comes first. A token is single-use, so the widget
- * resets after every submit. Every submit also sends a honeypot field,
- * `website`, that people never see or fill, and `source` when the site
- * names one. A refusal is read from the worker's `error` code first
+ * For 0G's newsletter worker (`newsletter.turnstile`): the bot check is
+ * the submit's second step, not the page's. Nothing of Turnstile runs at
+ * page load; focusing the field fetches its script, and a submit renders
+ * a Cloudflare Turnstile widget, invisible unless Cloudflare wants an
+ * interaction, then posts once it hands over a one-time token as
+ * `turnstileToken`. The widget is removed after every submit, since a
+ * token is single-use, so the check never lingers under the field. Every
+ * submit also sends a honeypot field, `website`, that people never see or
+ * fill, and `source` when the site names one. A refusal is read from the worker's `error` code first
  * (`invalid_email`, `captcha_failed`, `rate_limited`), then from the
  * status as before. No cookies and no header beyond Content-Type, which
  * is all the worker's CORS allows.
@@ -90,8 +92,9 @@ export function outcomeOf(status: number, body: { ok?: unknown; error?: unknown 
   return refusal(status >= 200 && status < 300 ? 0 : status);
 }
 
-/** How long a submit waits for the bot check before giving up. */
-const TOKEN_WAIT_MS = 15_000;
+/** How long a submit waits for the bot check before giving up: long
+ *  enough for a person to answer the checkbox when Cloudflare asks. */
+const TOKEN_WAIT_MS = 60_000;
 
 export function NewsletterForm({
   endpoint,
@@ -112,50 +115,52 @@ export function NewsletterForm({
   const [state, setState] = useState<State>({ kind: "idle" });
   const box = useRef<HTMLDivElement>(null);
   const widget = useRef<{ api: TurnstileApi; id: string } | null>(null);
-  const token = useRef("");
-  const waiting = useRef<Array<(token: string) => void>>([]);
   const siteKey = turnstile?.siteKey;
   const theme = turnstile?.theme ?? "auto";
 
-  useEffect(() => {
-    if (!siteKey) return;
-    let gone = false;
-    loadTurnstile()
-      .then((api) => {
-        if (gone || !box.current) return;
-        const widgetId = api.render(box.current, {
-          sitekey: siteKey,
+  /** Removes the submit's widget, if one is up. */
+  function dropWidget() {
+    widget.current?.api.remove(widget.current.id);
+    widget.current = null;
+  }
+
+  useEffect(() => dropWidget, []);
+
+  /** Fetches the script ahead of a submit, so the check starts sooner.
+   *  Draws nothing. */
+  function preload() {
+    if (siteKey) loadTurnstile().catch(() => {});
+  }
+
+  /** The bot check, run for this submit: a widget rendered now, whose
+   *  token comes back, or "" when the script fails, the token expires
+   *  unused, or none arrives in time (Turnstile retries its own errors). */
+  async function check(key: string): Promise<string> {
+    let api: TurnstileApi;
+    try {
+      api = await loadTurnstile();
+    } catch {
+      return "";
+    }
+    if (!box.current) return "";
+    dropWidget();
+    const container = box.current;
+    return new Promise<string>((resolve) => {
+      const timer = setTimeout(() => resolve(""), TOKEN_WAIT_MS);
+      const done = (t: string) => {
+        clearTimeout(timer);
+        resolve(t);
+      };
+      widget.current = {
+        api,
+        id: api.render(container, {
+          sitekey: key,
           appearance: "interaction-only",
           theme,
-          callback: (t) => {
-            token.current = t;
-            for (const resolve of waiting.current.splice(0)) resolve(t);
-          },
-          "expired-callback": () => {
-            token.current = "";
-          },
-          "error-callback": () => {
-            token.current = "";
-          },
-        });
-        widget.current = { api, id: widgetId };
-      })
-      .catch(() => {
-        // no script: a submit waits, then ends as `verification`
-      });
-    return () => {
-      gone = true;
-      widget.current?.api.remove(widget.current.id);
-      widget.current = null;
-    };
-  }, [siteKey, theme]);
-
-  /** The widget's token, waiting for one if it has none yet. */
-  function nextToken(): Promise<string> {
-    if (token.current) return Promise.resolve(token.current);
-    return new Promise((resolve) => {
-      waiting.current.push(resolve);
-      setTimeout(() => resolve(""), TOKEN_WAIT_MS);
+          callback: done,
+          "expired-callback": () => done(""),
+        }),
+      };
     });
   }
 
@@ -168,7 +173,7 @@ export function NewsletterForm({
     setState({ kind: "sending" });
     let outcome: NewsletterOutcome;
     try {
-      const turnstileToken = siteKey ? await nextToken() : undefined;
+      const turnstileToken = siteKey ? await check(siteKey) : undefined;
       if (siteKey && !turnstileToken) {
         outcome = "verification";
       } else {
@@ -183,11 +188,8 @@ export function NewsletterForm({
     } catch {
       outcome = "failed";
     }
-    if (siteKey) {
-      // a token is good for one submit
-      token.current = "";
-      if (widget.current) widget.current.api.reset(widget.current.id);
-    }
+    // a token is good for one submit, and the check is this submit's
+    dropWidget();
     setState(outcome === "done" ? { kind: "done" } : { kind: "error", message: labels[outcome] });
     announceOutcome(outcome);
   }
@@ -213,6 +215,7 @@ export function NewsletterForm({
           required
           maxLength={256}
           autoComplete="email"
+          onFocus={preload}
           placeholder={labels.email}
           className="h-[32px] w-[140px] rounded-full border border-field-line bg-field px-[12px] text-[14px] leading-[1.4] font-light tracking-normal text-on-control outline-none placeholder:text-field-placeholder focus-visible:border-footer-text"
         />
