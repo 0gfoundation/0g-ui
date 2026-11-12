@@ -25,8 +25,8 @@ function Glyph({ size, className, d }: { size: number; className?: string; d: st
 /** Outbound, not a chevron (owner, 2026-09-20: the draft's chevron reads
  *  as "more", and an outbound link leaves the site). The same arrow the
  *  hub's Discover doors and Activity links wear, at label size. */
-export function OutboundIcon() {
-  return <Glyph size={13} d="M7 17 17 7M8 7h9v9" />;
+export function OutboundIcon({ size = 13 }: { size?: number }) {
+  return <Glyph size={size} d="M7 17 17 7M8 7h9v9" />;
 }
 
 /** A group's disclosure: points down closed, up open. */
