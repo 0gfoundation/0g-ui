@@ -3,7 +3,7 @@
 import { type CSSProperties, type PointerEvent as ReactPointerEvent, useEffect, useId, useRef } from "react";
 
 import { cx } from "./cx";
-import { ChevronIcon, ChevronRightIcon, CloseIcon } from "./glyphs";
+import { ChevronIcon, ChevronRightIcon, CloseIcon, OutboundIcon } from "./glyphs";
 import { isActive, isGroupActive, type ShellGroup, type ShellLinkItem } from "./items";
 import { useShell } from "./provider";
 
@@ -18,8 +18,10 @@ export const focusRing =
  * A group in the desktop bar (design system 2026, "dropdown panel web"):
  * a text trigger with a chevron that opens a panel the bar's full width
  * under it, one column per section, each under a small-caps heading,
- * each link a title with a chevron over an optional description. A
- * close button sits at the panel's corner.
+ * each link a title with a chevron (an outbound arrow for another site)
+ * over an optional description, which wraps at its column's width, or
+ * at half the panel's in a one-column panel. A close button sits
+ * at the panel's corner.
  *
  * Controlled by TopNav, which keeps one group open at a time. Opens on
  * click, and on hover for a mouse; Escape closes it and returns focus to
@@ -154,7 +156,13 @@ export function NavDropdown({
                     <li key={item.href + item.label}>
                       <PanelLink item={item} onNavigate={() => onOpenChange(false)} />
                       {item.description && (
-                        <p className="mt-1 max-w-[280px] text-[12px] leading-[17px] text-nav-muted">
+                        <p
+                          className={cx(
+                            "mt-1 text-[12px] leading-[17px] text-nav-muted",
+                            // one column spans the panel: wrap at half of it
+                            group.sections.length === 1 && "max-w-[max(280px,50%)]",
+                          )}
+                        >
                           {item.description}
                         </p>
                       )}
@@ -184,8 +192,9 @@ export function NavDropdown({
 }
 
 /** A panel link: the title with its chevron, in the nav title colour;
- *  the router's Link in-app, a new tab otherwise. `size` picks the
- *  desktop panel's rows or the phone menu's 40px tap rows. */
+ *  the router's Link in-app, a new tab with the outbound arrow otherwise.
+ *  `size` picks the desktop panel's rows or the phone menu's 40px tap
+ *  rows. */
 export function PanelLink({
   item,
   onNavigate,
@@ -203,6 +212,8 @@ export function PanelLink({
   );
   const chevron = <ChevronRightIcon size={size === "panel" ? 16 : 14} />;
   if (item.external) {
+    // another site: the outbound arrow, as the bar's and tab bar's
+    // external links wear it, not the "go" chevron (Kevin, 2026-11-12)
     return (
       <a
         href={item.href}
@@ -212,7 +223,7 @@ export function PanelLink({
         className={cx(className, "text-nav-title")}
       >
         {item.label}
-        {chevron}
+        <OutboundIcon size={size === "panel" ? 16 : 14} />
       </a>
     );
   }
@@ -231,7 +242,8 @@ export function PanelLink({
 }
 
 /** A link's secondary row (its `links`): small brand-colour titles with
- *  chevrons, in the desktop panel and the phone menu alike. */
+ *  chevrons (outbound arrows for another site), in the desktop panel and
+ *  the phone menu alike. */
 export function SubLinks({ item, onNavigate }: { item: ShellLinkItem; onNavigate?: () => void }) {
   const { Link } = useShell();
   if (!item.links?.length) return null;
@@ -252,7 +264,7 @@ export function SubLinks({ item, onNavigate }: { item: ShellLinkItem; onNavigate
             className={className}
           >
             {link.label}
-            <ChevronRightIcon size={12} />
+            <OutboundIcon size={12} />
           </a>
         ) : (
           <Link key={link.href + link.label} href={link.href} onClick={onNavigate} className={className}>

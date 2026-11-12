@@ -146,9 +146,10 @@ const items: ShellNavEntry[] = [
 
 - A `ShellGroup` (`label` plus `sections`) renders in the bar as a
   trigger opening a panel the bar's width: one column per section under
-  its optional heading, each link a title with a chevron over an
-  optional `description` and an optional row of secondary `links`, a
-  close button at the corner. One group is open at a time; hover opens
+  its optional heading, each link a title with a chevron (an outbound
+  arrow when `external`) over an optional `description` (wrapping at
+  its column's width, or half the panel's in a one-column panel) and an optional row of secondary
+  `links`, a close button at the corner. One group is open at a time; hover opens
   it for a mouse, click and keyboard for everything else, Escape and a
   click outside close it.
 - `menu` adds a round menu button below lg (or md, see `collapse`) that
