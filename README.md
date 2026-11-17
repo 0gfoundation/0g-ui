@@ -26,6 +26,7 @@ isn't here, add a row.
 | 0G | https://0g.ai | `0gfoundation/0g-site` | yes |
 | Hub | https://hub.0g.ai | `0gfoundation/0g-hub` | yes |
 | Builder Hub | https://build.0g.ai | `0gfoundation/developer-hub` | no |
+| Zerobot | https://zerobot.0g.ai | `0gfoundation/zerobot` | no |
 
 A site in the consumer diff is listed in `consumers.json` and has a
 manifest, so every PR here shows what changes for it. One that isn't
