@@ -11,9 +11,26 @@ every 0G site, each site with its own colours, menu, title and lockup.
   where the phone measurements are taken
 - `docs/spec/phone-shell-measurements-2026-09-21.md` — what the phone
   shell does on scroll and the evidence for each rule
-- `consumers.json` — the sites that install the package, and where each
+- `consumers.json` — the sites the consumer diff renders, and where each
   keeps its manifest
 - `tools/consumer-diff/` — what a change does to each of those sites
+
+## Sites using it
+
+The sites we know install the package. Any repository can pin a tag
+without telling us, so this list is not exhaustive. If you run one that
+isn't here, add a row.
+
+| Site | URL | Repository | In the consumer diff |
+| --- | --- | --- | --- |
+| 0G | https://0g.ai | `0gfoundation/0g-site` | yes |
+| Hub | https://hub.0g.ai | `0gfoundation/0g-hub` | yes |
+| Builder Hub | https://build.0g.ai | `0gfoundation/developer-hub` | no |
+| Zerobot | https://zerobot.0g.ai | `0gfoundation/zerobot` | no |
+
+A site in the consumer diff is listed in `consumers.json` and has a
+manifest, so every PR here shows what changes for it. One that isn't
+gets no warning before it repins.
 
 ## Working on it
 

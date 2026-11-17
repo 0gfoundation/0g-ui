@@ -2,8 +2,9 @@
 
 The shared 0G site shell as a package, `@0gfoundation/0g-ui`. Born from
 `0gfoundation/0g-hub` ADR-0012 (read it first: `docs/adr/0012-shared-site-shell.md`
-there, work in hub issue #457). The sites that install it are listed in
-`consumers.json`.
+there, work in hub issue #457). The sites known to install it are listed
+in the README under "Sites using it". Those the consumer diff renders
+are in `consumers.json`.
 
 ## Boundary
 
